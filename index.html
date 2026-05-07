@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>autobattler</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <section id="draftScreen" class="screen active">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Auto Gladiators Prototype</p>
+          <h1>autobattler</h1>
+        </div>
+        <div id="draftSlots" class="draft-slots" aria-label="Player draft slots"></div>
+      </header>
+
+      <main class="draft-layout">
+        <section>
+          <div class="section-title">
+            <h2>Choose Hero</h2>
+            <span>8 contenders</span>
+          </div>
+          <div id="heroGrid" class="hero-grid"></div>
+        </section>
+
+        <aside id="heroInspector" class="inspector"></aside>
+      </main>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <header class="game-header">
+        <div class="identity">
+          <div id="playerPortrait" class="mini-portrait"></div>
+          <div>
+            <p class="eyebrow">Your Hero</p>
+            <h1 id="playerName">Hero</h1>
+          </div>
+        </div>
+        <div class="top-meters">
+          <div class="meter-pill">
+            <span>Round</span>
+            <strong id="roundValue">1</strong>
+          </div>
+          <div class="meter-pill">
+            <span>Gold</span>
+            <strong id="goldValue">0</strong>
+          </div>
+          <div class="meter-pill">
+            <span>Health</span>
+            <strong id="healthValue">30</strong>
+          </div>
+          <button id="newGameBtn" class="icon-button" title="New game" aria-label="New game">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.7V3h-5.7l2 2A10 10 0 1 0 22 12h-2A8 8 0 1 1 4 12Z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <section class="arena-section">
+          <div class="arena-toolbar">
+            <div>
+              <p class="eyebrow">Arena</p>
+              <h2 id="matchTitle">Match</h2>
+            </div>
+            <div class="combat-actions">
+              <button id="fightBtn" class="primary-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.4 4.3 20 2l-2.3 5.6L20 10l-3 1.4-1.4 3L13 12l-6.8 6.8a2 2 0 0 1-2.8-2.8L10.2 9 8 6.7l3-1.4 1.4-3 2 2Z"/></svg>
+                Fight
+              </button>
+              <button id="nextRoundBtn" class="secondary-button" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5v14l11-7L5 5Zm12 0h2v14h-2V5Z"/></svg>
+                Next
+              </button>
+            </div>
+          </div>
+
+          <div class="arena-board">
+            <div id="fxLayer" class="fx-layer" aria-hidden="true"></div>
+
+            <div class="fighter fighter-left">
+              <div id="leftPortrait" class="fighter-portrait"></div>
+              <div class="fighter-info">
+                <div class="name-row">
+                  <strong id="leftName">You</strong>
+                  <span id="leftShield" class="shield-badge">0</span>
+                </div>
+                <div class="bar hp-bar"><span id="leftHpBar"></span></div>
+                <div class="bar mana-bar"><span id="leftManaBar"></span></div>
+              </div>
+            </div>
+
+            <div id="roundResult" class="round-result"></div>
+
+            <div class="fighter fighter-right">
+              <div id="rightPortrait" class="fighter-portrait"></div>
+              <div class="fighter-info">
+                <div class="name-row">
+                  <strong id="rightName">Opponent</strong>
+                  <span id="rightShield" class="shield-badge">0</span>
+                </div>
+                <div class="bar hp-bar"><span id="rightHpBar"></span></div>
+                <div class="bar mana-bar"><span id="rightManaBar"></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ability-strip">
+            <div class="ability-tile">
+              <span>Interval</span>
+              <strong id="passiveName">Passive</strong>
+              <div class="cooldown"><span id="passiveCooldown"></span></div>
+            </div>
+            <div class="ability-tile">
+              <span>Ultimate</span>
+              <strong id="ultimateName">Ultimate</strong>
+              <div class="cooldown"><span id="ultimateCharge"></span></div>
+            </div>
+          </div>
+
+          <div id="combatLog" class="combat-log" aria-live="polite"></div>
+        </section>
+
+        <aside class="shop-section">
+          <div class="section-title compact">
+            <h2>Card Shop</h2>
+            <button id="rerollBtn" class="icon-button" title="Refresh shop" aria-label="Refresh shop">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.7 6.3A8 8 0 0 0 4 12H2A10 10 0 0 1 19.1 5l1.9-2v6h-6l2.7-2.7ZM6.3 17.7A8 8 0 0 0 20 12h2A10 10 0 0 1 4.9 19L3 21v-6h6l-2.7 2.7Z"/></svg>
+            </button>
+          </div>
+          <div id="shopGrid" class="shop-grid"></div>
+        </aside>
+
+        <aside class="stats-section">
+          <div class="section-title compact">
+            <h2>Upgrades</h2>
+            <span id="powerValue">0 power</span>
+          </div>
+          <div id="upgradeGrid" class="upgrade-grid"></div>
+
+          <div class="section-title compact standings-title">
+            <h2>Standings</h2>
+            <span id="aliveValue">8 alive</span>
+          </div>
+          <div id="standingsList" class="standings-list"></div>
+        </aside>
+      </main>
+    </section>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
+
+
