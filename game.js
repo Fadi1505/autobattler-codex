@@ -412,7 +412,7 @@ function renderIdleFighters() {
   const leftStats = getStats(player);
   const rightStats = opponent ? getStats(opponent) : leftStats;
 
-  el.leftPortrait.innerHTML = heroSvg(getHero(player.heroId));
+  el.leftPortrait.innerHTML = heroUnitSvg(getHero(player.heroId));
   el.leftPortrait.parentElement.style.setProperty("--hero-color", getHero(player.heroId).color);
   el.leftName.textContent = player.name;
   el.leftShield.textContent = leftStats.startShield;
@@ -420,7 +420,7 @@ function renderIdleFighters() {
   setBar(el.leftManaBar, 0);
 
   if (opponent) {
-    el.rightPortrait.innerHTML = heroSvg(getHero(opponent.heroId));
+    el.rightPortrait.innerHTML = heroUnitSvg(getHero(opponent.heroId));
     el.rightPortrait.parentElement.style.setProperty("--hero-color", getHero(opponent.heroId).color);
     el.rightName.textContent = opponent.name;
     el.rightShield.textContent = rightStats.startShield;
@@ -891,8 +891,8 @@ function renderCombat() {
   const left = combat.left;
   const right = combat.right;
 
-  el.leftPortrait.innerHTML = heroSvg(left.hero);
-  el.rightPortrait.innerHTML = heroSvg(right.hero);
+  el.leftPortrait.innerHTML = heroUnitSvg(left.hero);
+  el.rightPortrait.innerHTML = heroUnitSvg(right.hero);
   el.leftPortrait.parentElement.style.setProperty("--hero-color", left.hero.color);
   el.rightPortrait.parentElement.style.setProperty("--hero-color", right.hero.color);
   el.leftName.textContent = left.player.name;
@@ -1072,7 +1072,7 @@ function getArenaPoint(side) {
   const rect = portrait.getBoundingClientRect();
   return {
     x: rect.left + rect.width / 2 - boardRect.left,
-    y: rect.top + rect.height * 0.46 - boardRect.top
+    y: rect.top + rect.height * 0.54 - boardRect.top
   };
 }
 
@@ -1264,34 +1264,78 @@ function heroSvg(hero) {
   const character = heroCharacter(hero);
   const sigil = heroSigil(hero);
   return `
-    <svg viewBox="0 0 160 160" role="img" aria-label="${hero.name}">
+    <svg class="hero-model" viewBox="0 0 192 192" role="img" aria-label="${hero.name}">
       <defs>
         <linearGradient id="g-${hero.id}" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="${hero.color}"/>
           <stop offset="1" stop-color="${hero.secondary}"/>
         </linearGradient>
-        <radialGradient id="aura-${hero.id}" cx="50%" cy="42%" r="58%">
-          <stop offset="0" stop-color="${hero.secondary}" stop-opacity="0.34"/>
-          <stop offset="0.52" stop-color="${hero.color}" stop-opacity="0.18"/>
+        <linearGradient id="rim-${hero.id}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff8ec" stop-opacity="0.36"/>
+          <stop offset="0.55" stop-color="${hero.secondary}" stop-opacity="0.16"/>
+          <stop offset="1" stop-color="#000" stop-opacity="0.28"/>
+        </linearGradient>
+        <radialGradient id="aura-${hero.id}" cx="50%" cy="40%" r="60%">
+          <stop offset="0" stop-color="${hero.secondary}" stop-opacity="0.42"/>
+          <stop offset="0.48" stop-color="${hero.color}" stop-opacity="0.22"/>
           <stop offset="1" stop-color="${hero.color}" stop-opacity="0"/>
         </radialGradient>
+        <radialGradient id="ground-${hero.id}" cx="50%" cy="42%" r="64%">
+          <stop offset="0" stop-color="${hero.secondary}" stop-opacity="0.28"/>
+          <stop offset="0.48" stop-color="#33413c" stop-opacity="0.98"/>
+          <stop offset="1" stop-color="#171c1a" stop-opacity="1"/>
+        </radialGradient>
         <filter id="shadow-${hero.id}" x="-45%" y="-45%" width="190%" height="190%">
-          <feDropShadow dx="0" dy="10" stdDeviation="7" flood-color="#000" flood-opacity="0.48"/>
-          <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="${hero.color}" flood-opacity="0.38"/>
+          <feDropShadow dx="0" dy="11" stdDeviation="7" flood-color="#000" flood-opacity="0.55"/>
+          <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="${hero.color}" flood-opacity="0.4"/>
         </filter>
       </defs>
-      <rect width="160" height="160" rx="12" fill="#111313"/>
-      <circle cx="80" cy="72" r="63" fill="url(#aura-${hero.id})"/>
-      <path d="M14 123 C31 104, 44 98, 64 104 L96 104 C116 98, 130 104, 146 123 L146 146 L14 146 Z" fill="rgba(255,255,255,0.045)"/>
-      <ellipse cx="80" cy="132" rx="47" ry="10" fill="rgba(0,0,0,0.34)"/>
-      <g filter="url(#shadow-${hero.id})">
+      <rect width="192" height="192" rx="12" fill="#101313"/>
+      <path d="M0 121 C33 94, 48 68, 96 58 C142 68, 164 96, 192 123 L192 192 L0 192 Z" fill="url(#aura-${hero.id})"/>
+      <path d="M96 121 L162 151 L96 182 L30 151 Z" fill="url(#ground-${hero.id})" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <path d="M96 121 L162 151 L96 182 L30 151 Z M63 136 L129 166 M129 136 L63 166 M96 121 V182 M30 151 H162" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+      <path d="M96 133 L148 154 L96 177 L44 154 Z" fill="none" stroke="${hero.secondary}" stroke-width="2" opacity="0.38"/>
+      <ellipse cx="96" cy="150" rx="48" ry="17" fill="rgba(0,0,0,0.46)"/>
+      <g transform="translate(16 7) scale(1.02)" filter="url(#shadow-${hero.id})">
         ${character}
       </g>
-      ${sigil}
+      <path d="M31 151 L96 181 L96 188 L29 156 Z" fill="#090b0b" opacity="0.38"/>
+      <path d="M162 151 L96 181 L96 188 L164 156 Z" fill="#060707" opacity="0.52"/>
+      <g transform="translate(16 8)">${sigil}</g>
+      <path d="M18 24 C46 5, 145 6, 174 25" fill="none" stroke="url(#rim-${hero.id})" stroke-width="2" opacity="0.68"/>
     </svg>
   `;
 }
-
+function heroUnitSvg(hero) {
+  const character = heroCharacter(hero);
+  const sigil = heroSigil(hero);
+  return `
+    <svg class="hero-unit" viewBox="0 0 180 180" role="img" aria-label="${hero.name}">
+      <defs>
+        <linearGradient id="unit-g-${hero.id}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="${hero.color}"/>
+          <stop offset="1" stop-color="${hero.secondary}"/>
+        </linearGradient>
+        <radialGradient id="unit-aura-${hero.id}" cx="50%" cy="42%" r="58%">
+          <stop offset="0" stop-color="${hero.secondary}" stop-opacity="0.38"/>
+          <stop offset="0.5" stop-color="${hero.color}" stop-opacity="0.18"/>
+          <stop offset="1" stop-color="${hero.color}" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="unit-shadow-${hero.id}" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="0" dy="13" stdDeviation="7" flood-color="#000" flood-opacity="0.55"/>
+          <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="${hero.color}" flood-opacity="0.34"/>
+        </filter>
+      </defs>
+      <ellipse cx="90" cy="140" rx="57" ry="20" fill="rgba(0,0,0,0.48)"/>
+      <path d="M90 112 L148 139 L90 168 L32 139 Z" fill="url(#unit-aura-${hero.id})" stroke="${hero.secondary}" stroke-width="2" opacity="0.78"/>
+      <path d="M90 112 L148 139 L90 168 L32 139 Z M61 126 L119 153 M119 126 L61 153" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
+      <g transform="translate(9 -5) scale(1.02)" filter="url(#unit-shadow-${hero.id})">
+        ${character.replaceAll(`url(#g-${hero.id})`, `url(#unit-g-${hero.id})`)}
+      </g>
+      <g transform="translate(10 -2) scale(0.78)" opacity="0.72">${sigil.replaceAll(`url(#g-${hero.id})`, `url(#unit-g-${hero.id})`)}</g>
+    </svg>
+  `;
+}
 function heroCharacter(hero) {
   switch (hero.shape) {
     case "flame":
@@ -1482,4 +1526,7 @@ function heroSigil(hero) {
   if (hero.shape === "void") return `<circle cx="128" cy="42" r="18" fill="${fill}" opacity="0.62"/><circle cx="128" cy="42" r="9" fill="#111313"/><circle cx="128" cy="42" r="4" fill="${stroke}"/>`;
   return "";
 }
+
+
+
 
