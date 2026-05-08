@@ -1552,3 +1552,9 @@ button:disabled {
 [hidden] {
   display: none !important;
 }
+
+.mini-portrait .hero-unit {
+  width: 132%;
+  height: 132%;
+  transform: translate(-13%, -16%);
+}

@@ -374,7 +374,7 @@ function renderGame() {
   const hero = getHero(player.heroId);
   const opponent = getOpponent();
 
-  el.playerPortrait.innerHTML = heroSvg(hero);
+  el.playerPortrait.innerHTML = heroUnitSvg(hero);
   el.playerName.textContent = hero.name;
   el.roundValue.textContent = state.round;
   el.goldValue.textContent = state.gold;
@@ -1337,182 +1337,133 @@ function heroUnitSvg(hero) {
   `;
 }
 function heroCharacter(hero) {
-  switch (hero.shape) {
-    case "flame":
-      return characterBase(hero, {
-        cape: "flame",
-        helm: "topknot",
-        torso: "lamellar",
-        weapon: "katana",
-        offhand: "ember",
-        stance: "duelist"
-      });
-    case "tide":
-      return characterBase(hero, {
-        cape: "wave",
-        helm: "crest",
-        torso: "scale",
-        weapon: "trident",
-        offhand: "towerShield",
-        stance: "guardian"
-      });
-    case "veil":
-      return characterBase(hero, {
-        cape: "cloak",
-        helm: "hood",
-        torso: "leather",
-        weapon: "daggers",
-        offhand: "smoke",
-        stance: "assassin"
-      });
-    case "iron":
-      return characterBase(hero, {
-        cape: "banner",
-        helm: "haloHelm",
-        torso: "plate",
-        weapon: "mace",
-        offhand: "kiteShield",
-        stance: "tank"
-      });
-    case "storm":
-      return characterBase(hero, {
-        cape: "stormRobe",
-        helm: "crown",
-        torso: "robe",
-        weapon: "staff",
-        offhand: "spark",
-        stance: "caster"
-      });
-    case "thorn":
-      return characterBase(hero, {
-        cape: "vines",
-        helm: "horns",
-        torso: "hide",
-        weapon: "claws",
-        offhand: "thorns",
-        stance: "bruiser"
-      });
-    case "prism":
-      return characterBase(hero, {
-        cape: "shortCape",
-        helm: "visor",
-        torso: "lightArmor",
-        weapon: "bow",
-        offhand: "quiver",
-        stance: "archer"
-      });
-    case "void":
-      return characterBase(hero, {
-        cape: "voidCoat",
-        helm: "mask",
-        torso: "alchemist",
-        weapon: "flask",
-        offhand: "orb",
-        stance: "alchemist"
-      });
-    default:
-      return characterBase(hero, {});
-  }
+  const specs = {
+    flame: {
+      base: "#5d5a55", mid: "#77736c", light: "#aaa59a", dark: "#2b2a29",
+      accent: "#ef684a", glow: "#ffc45a", eyes: "#171b1c", patch: "magma", accessory: "ember"
+    },
+    tide: {
+      base: "#b8c2bd", mid: "#d2d9d4", light: "#f1f4ee", dark: "#68736f",
+      accent: "#53b7c8", glow: "#8ff0dc", eyes: "#0b3142", patch: "water", accessory: "shell"
+    },
+    veil: {
+      base: "#3e3a54", mid: "#5b5480", light: "#8f86c8", dark: "#151521",
+      accent: "#8d74df", glow: "#56d4cf", eyes: "#05070a", patch: "shadow", accessory: "crescent"
+    },
+    iron: {
+      base: "#aeb3b9", mid: "#d6d3ca", light: "#fff4d4", dark: "#636a70",
+      accent: "#d9b85d", glow: "#fff0ad", eyes: "#172637", patch: "gold", accessory: "bulwark"
+    },
+    storm: {
+      base: "#b9c8d9", mid: "#dfe9f3", light: "#ffffff", dark: "#63758a",
+      accent: "#5f91d8", glow: "#d9f2ff", eyes: "#0d2744", patch: "lightning", accessory: "rod"
+    },
+    thorn: {
+      base: "#8e9278", mid: "#b6aa7e", light: "#d8d0a6", dark: "#4a513f",
+      accent: "#7fb069", glow: "#d8ef9f", eyes: "#182513", patch: "moss", accessory: "horns"
+    },
+    prism: {
+      base: "#caa04b", mid: "#f0bc5a", light: "#ffe6a0", dark: "#6a4528",
+      accent: "#f2b84b", glow: "#fff2b7", eyes: "#1f1710", patch: "crystal", accessory: "crystal"
+    },
+    void: {
+      base: "#51405f", mid: "#725687", light: "#b293d0", dark: "#17101f",
+      accent: "#c47adf", glow: "#6de0db", eyes: "#050608", patch: "void", accessory: "orb"
+    }
+  };
+  return creatureModel(hero, specs[hero.shape] || specs.thorn);
 }
 
-function characterBase(hero, look) {
-  const grad = `url(#g-${hero.id})`;
-  const skin = look.helm === "mask" || look.helm === "hood" ? "#d6d1c7" : "#cda37a";
+function creatureModel(hero, spec) {
   return `
-    <g class="sprite-character">
-      ${capeSvg(look.cape, grad, hero)}
-      ${weaponBackSvg(look.weapon, grad, hero)}
-      <path d="M55 125 L66 88 L78 90 L73 130 Z" fill="#222827"/>
-      <path d="M105 125 L94 88 L82 90 L87 130 Z" fill="#1a1e1e"/>
-      <path d="M51 130 C59 124, 71 124, 77 132 L52 137 Z" fill="#2e3433"/>
-      <path d="M109 130 C101 124, 89 124, 83 132 L108 137 Z" fill="#2e3433"/>
-      <path d="M58 70 C61 56, 70 49, 80 49 C91 49, 100 57, 103 70 L98 104 C92 112, 68 112, 62 104 Z" fill="#191d1d"/>
-      ${torsoSvg(look.torso, grad, hero)}
-      ${armsSvg(look.weapon, look.offhand, grad, hero)}
-      <circle cx="80" cy="42" r="18" fill="${skin}"/>
-      <path d="M62 43 C66 25, 95 23, 100 43 C94 36, 89 34, 80 35 C71 34, 67 36, 62 43 Z" fill="#1b1f20"/>
-      ${helmSvg(look.helm, grad, hero)}
-      <circle cx="73" cy="43" r="2" fill="#141616"/>
-      <circle cx="87" cy="43" r="2" fill="#141616"/>
-      <path d="M74 53 C78 56, 83 56, 87 53" fill="none" stroke="#5a4032" stroke-width="2" stroke-linecap="round"/>
-      ${weaponFrontSvg(look.weapon, grad, hero)}
-      ${offhandFxSvg(look.offhand, grad, hero)}
+    <g class="model-creature">
+      <ellipse cx="80" cy="141" rx="48" ry="13" fill="rgba(0,0,0,0.34)"/>
+      ${creatureBackAccessory(spec)}
+      <path d="M48 81 C35 91, 27 111, 25 131 C31 139, 43 136, 49 127 C50 115, 55 101, 66 94 Z" fill="${spec.dark}"/>
+      <path d="M112 81 C126 91, 135 112, 137 133 C131 141, 118 138, 111 128 C110 115, 105 101, 94 94 Z" fill="${spec.dark}"/>
+      <path d="M42 92 L57 83 L70 95 L57 116 L39 113 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M118 92 L103 83 L90 95 L103 116 L121 113 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M31 112 L55 105 L66 124 L54 149 L28 143 L20 126 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M129 112 L105 105 L94 124 L106 149 L132 143 L140 126 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M57 79 L75 67 L96 68 L111 83 L106 116 L94 131 L65 131 L52 116 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M66 86 L80 76 L94 86 L92 110 L80 120 L67 110 Z" fill="${spec.mid}" opacity="0.92"/>
+      <path d="M65 130 L78 130 L75 151 L61 154 L54 145 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M95 130 L82 130 L85 151 L99 154 L106 145 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M53 150 L76 148 L82 158 L67 166 L49 162 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M107 150 L84 148 L78 158 L93 166 L111 162 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M44 42 C45 24, 60 14, 82 13 C105 14, 121 27, 123 47 C125 66, 111 78, 88 82 C66 83, 48 74, 44 55 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M53 34 L76 20 L103 24 L117 42 L104 58 L76 63 L53 54 Z" fill="${spec.mid}" opacity="0.88"/>
+      <path d="M49 50 L64 62 L61 72 L48 63 Z" fill="${spec.dark}" opacity="0.42"/>
+      <path d="M115 49 L99 62 L102 72 L116 62 Z" fill="${spec.dark}" opacity="0.42"/>
+      <path d="M67 47 C65 38, 72 33, 79 37 C84 40, 84 50, 77 54 C71 57, 68 53, 67 47 Z" fill="${spec.eyes}"/>
+      <path d="M94 47 C92 38, 99 33, 106 37 C111 40, 111 50, 104 54 C98 57, 95 53, 94 47 Z" fill="${spec.eyes}"/>
+      <circle cx="76" cy="42" r="3" fill="#ffffff" opacity="0.75"/>
+      <circle cx="103" cy="42" r="3" fill="#ffffff" opacity="0.75"/>
+      <path d="M76 61 L90 60 L96 68 L82 72 Z" fill="${spec.light}" opacity="0.58"/>
+      <path d="M59 28 C71 17, 95 18, 109 29" fill="none" stroke="${spec.light}" stroke-width="4" opacity="0.36" stroke-linecap="round"/>
+      <path d="M60 88 L75 77 M87 77 L103 90 M62 111 L79 120 M98 120 L107 104 M37 124 L58 117 M122 123 L103 117" fill="none" stroke="${spec.dark}" stroke-width="3" opacity="0.42" stroke-linecap="round"/>
+      ${creatureElementPatches(spec)}
+      ${creatureFrontAccessory(spec)}
     </g>
   `;
 }
 
-function capeSvg(type, grad, hero) {
-  if (type === "flame") return `<path d="M55 65 C38 82, 37 112, 50 130 C55 116, 65 108, 76 103 C67 91, 68 76, 80 59 C70 60, 62 62, 55 65 Z" fill="${grad}" opacity="0.62"/><path d="M98 65 C119 86, 119 112, 106 132 C100 116, 92 109, 83 103 C94 89, 92 75, 80 59 C88 60, 94 62, 98 65 Z" fill="${hero.secondary}" opacity="0.28"/>`;
-  if (type === "wave") return `<path d="M50 66 C32 85, 34 116, 55 132 C61 117, 75 116, 80 99 C89 119, 107 116, 113 132 C131 112, 126 83, 107 66 Z" fill="${grad}" opacity="0.52"/><path d="M39 111 C55 102, 69 108, 80 116 C94 102, 110 103, 123 112" fill="none" stroke="#d8fff5" stroke-width="5" opacity="0.36" stroke-linecap="round"/>`;
-  if (type === "cloak") return `<path d="M49 63 C35 83, 36 118, 57 137 L80 104 L105 137 C124 116, 124 82, 108 63 C95 69, 66 69, 49 63 Z" fill="#151819"/><path d="M52 69 C61 89, 65 110, 59 134" fill="none" stroke="${hero.color}" stroke-width="4" opacity="0.55"/>`;
-  if (type === "banner") return `<path d="M43 65 L62 62 L61 135 L47 126 L35 135 Z" fill="${hero.secondary}" opacity="0.55"/><path d="M117 65 L98 62 L99 135 L113 126 L125 135 Z" fill="${grad}" opacity="0.46"/>`;
-  if (type === "stormRobe") return `<path d="M48 66 C42 94, 47 119, 62 137 L80 110 L99 137 C114 119, 119 94, 112 66 C96 75, 64 75, 48 66 Z" fill="${grad}" opacity="0.5"/><path d="M91 69 L75 101 H88 L72 130" fill="none" stroke="#fff8ec" stroke-width="4" opacity="0.58" stroke-linejoin="round"/>`;
-  if (type === "vines") return `<path d="M48 69 C35 91, 42 120, 63 136 C58 113, 62 92, 79 68 C96 92, 102 113, 97 136 C119 121, 126 91, 111 69 Z" fill="${grad}" opacity="0.44"/><path d="M49 101 C65 91, 98 93, 113 105 M57 118 C76 107, 94 109, 107 121" fill="none" stroke="#cbe6a4" stroke-width="4" opacity="0.55" stroke-linecap="round"/>`;
-  if (type === "shortCape") return `<path d="M52 67 C48 89, 56 107, 70 116 L80 101 L91 116 C105 107, 112 89, 108 67 Z" fill="${grad}" opacity="0.48"/>`;
-  if (type === "voidCoat") return `<path d="M47 66 C36 91, 39 121, 60 139 L80 106 L101 139 C121 121, 124 91, 113 66 C97 72, 63 72, 47 66 Z" fill="#17131d"/><path d="M48 92 C61 83, 102 83, 114 93 M55 119 C73 112, 90 112, 106 120" fill="none" stroke="${hero.color}" stroke-width="4" opacity="0.5"/>`;
+function creatureElementPatches(spec) {
+  const fill = spec.accent;
+  const glow = spec.glow;
+  const common = `
+    <path d="M61 25 C71 20, 78 25, 73 35 C65 38, 57 34, 61 25 Z" fill="${fill}" opacity="0.88"/>
+    <path d="M101 28 C112 27, 118 34, 112 42 C104 44, 97 38, 101 28 Z" fill="${fill}" opacity="0.82"/>
+    <path d="M56 91 C65 87, 72 92, 68 101 C59 104, 52 99, 56 91 Z" fill="${fill}" opacity="0.82"/>
+    <path d="M110 111 C122 108, 128 117, 121 128 C110 129, 104 121, 110 111 Z" fill="${fill}" opacity="0.84"/>
+    <path d="M34 121 C43 116, 51 122, 47 133 C37 136, 30 130, 34 121 Z" fill="${fill}" opacity="0.82"/>
+  `;
+  if (spec.patch === "magma") {
+    return common + `<path d="M72 83 L84 102 L78 123 M95 89 L88 108" fill="none" stroke="${glow}" stroke-width="5" stroke-linecap="round" opacity="0.82"/>`;
+  }
+  if (spec.patch === "lightning") {
+    return common + `<path d="M82 76 L70 105 H82 L73 132 L99 94 H84 Z" fill="${glow}" opacity="0.82"/>`;
+  }
+  if (spec.patch === "crystal") {
+    return common + `<path d="M80 74 L96 94 L81 119 L65 94 Z" fill="${glow}" opacity="0.78"/><path d="M81 74 V119 M65 94 H96" stroke="#fff8ec" stroke-width="2" opacity="0.55"/>`;
+  }
+  if (spec.patch === "void") {
+    return common + `<circle cx="82" cy="100" r="15" fill="${fill}" opacity="0.78"/><circle cx="82" cy="100" r="7" fill="${spec.dark}"/><circle cx="82" cy="100" r="3" fill="${glow}"/>`;
+  }
+  return common;
+}
+
+function creatureBackAccessory(spec) {
+  if (spec.accessory === "horns") {
+    return `<path d="M55 35 C34 21, 36 7, 53 15 C49 20, 51 28, 65 38 Z" fill="${spec.light}" stroke="${spec.dark}" stroke-width="3"/><path d="M105 35 C126 21, 124 7, 107 15 C111 20, 109 28, 95 38 Z" fill="${spec.light}" stroke="${spec.dark}" stroke-width="3"/>`;
+  }
+  if (spec.accessory === "rod") {
+    return `<path d="M126 32 L116 127" stroke="${spec.light}" stroke-width="6" stroke-linecap="round"/><circle cx="127" cy="31" r="12" fill="${spec.glow}"/><path d="M127 13 V49 M109 31 H145" stroke="#fff" stroke-width="3" opacity="0.55"/>`;
+  }
+  if (spec.accessory === "shell") {
+    return `<path d="M31 67 C20 50, 31 33, 51 34 C42 45, 42 58, 55 70 Z" fill="${spec.glow}" opacity="0.58"/>`;
+  }
+  if (spec.accessory === "crescent") {
+    return `<circle cx="121" cy="34" r="16" fill="${spec.accent}" opacity="0.38"/><circle cx="128" cy="30" r="15" fill="#111313"/>`;
+  }
   return "";
 }
 
-function torsoSvg(type, grad, hero) {
-  if (type === "lamellar") return `<path d="M63 70 L97 70 L103 103 C95 113, 66 113, 58 103 Z" fill="${grad}"/><path d="M66 78 H96 M64 88 H99 M63 98 H101" stroke="#fff8ec" stroke-width="3" opacity="0.38"/>`;
-  if (type === "scale") return `<path d="M61 70 L99 70 L105 102 C96 114, 64 114, 55 102 Z" fill="${grad}"/><path d="M68 80 C72 86, 77 86, 80 80 C84 86, 89 86, 93 80 M64 92 C70 99, 77 99, 80 92 C84 99, 91 99, 97 92" fill="none" stroke="#eafffb" stroke-width="3" opacity="0.42"/>`;
-  if (type === "leather") return `<path d="M62 70 L98 70 L102 104 C94 111, 67 111, 59 104 Z" fill="#202526"/><path d="M64 72 L96 72 L88 103 L70 103 Z" fill="${grad}" opacity="0.72"/><path d="M72 75 L88 103" stroke="#111313" stroke-width="4" opacity="0.7"/>`;
-  if (type === "plate") return `<path d="M58 72 L70 66 H91 L103 72 L108 102 C97 115, 63 115, 52 102 Z" fill="${grad}"/><path d="M66 76 H94 L99 101 C91 107, 69 107, 61 101 Z" fill="#e4e0d4" opacity="0.42"/><path d="M80 67 V109 M63 88 H98" stroke="#111313" stroke-width="4" opacity="0.55"/>`;
-  if (type === "robe") return `<path d="M61 69 L99 69 L109 132 C92 140, 68 140, 51 132 Z" fill="${grad}"/><path d="M80 71 L69 132 M80 71 L93 132" stroke="#fff8ec" stroke-width="4" opacity="0.35"/>`;
-  if (type === "hide") return `<path d="M57 72 L72 64 H89 L104 72 L108 105 C96 118, 64 118, 52 105 Z" fill="${grad}"/><path d="M64 75 L71 86 L61 93 L73 101 L66 113 M96 75 L89 86 L99 93 L87 101 L94 113" fill="none" stroke="#1b1e1d" stroke-width="5" opacity="0.5"/>`;
-  if (type === "lightArmor") return `<path d="M61 71 L99 71 L102 101 C94 111, 66 111, 58 101 Z" fill="${grad}"/><path d="M68 76 H92 L86 103 H74 Z" fill="#fff8ec" opacity="0.48"/><circle cx="80" cy="89" r="7" fill="${hero.secondary}"/>`;
-  if (type === "alchemist") return `<path d="M60 70 L100 70 L106 108 C95 118, 65 118, 54 108 Z" fill="#202326"/><path d="M67 73 H93 L98 107 C90 113, 70 113, 62 107 Z" fill="${grad}" opacity="0.68"/><path d="M71 82 H89 M69 94 H91" stroke="#fff8ec" stroke-width="3" opacity="0.36"/>`;
-  return `<path d="M61 70 L99 70 L104 103 C95 113, 65 113, 56 103 Z" fill="${grad}"/>`;
-}
-
-function armsSvg(weapon, offhand, grad, hero) {
-  const leftArm = `<path d="M61 75 C45 78, 39 92, 43 107" fill="none" stroke="#2b3130" stroke-width="10" stroke-linecap="round"/><circle cx="43" cy="108" r="6" fill="#cda37a"/>`;
-  const rightArm = `<path d="M99 75 C115 78, 121 92, 117 107" fill="none" stroke="#2b3130" stroke-width="10" stroke-linecap="round"/><circle cx="117" cy="108" r="6" fill="#cda37a"/>`;
-  if (weapon === "bow") return `<path d="M61 76 C46 79, 38 92, 39 108" fill="none" stroke="#2b3130" stroke-width="9" stroke-linecap="round"/><path d="M98 76 C111 82, 116 94, 121 108" fill="none" stroke="#2b3130" stroke-width="9" stroke-linecap="round"/><circle cx="39" cy="108" r="5" fill="#cda37a"/><circle cx="121" cy="108" r="5" fill="#cda37a"/>`;
-  if (weapon === "daggers") return `<path d="M62 76 C47 79, 40 91, 36 103" fill="none" stroke="#2b3130" stroke-width="9" stroke-linecap="round"/><path d="M98 76 C113 79, 120 91, 124 103" fill="none" stroke="#2b3130" stroke-width="9" stroke-linecap="round"/><circle cx="36" cy="103" r="5" fill="#cda37a"/><circle cx="124" cy="103" r="5" fill="#cda37a"/>`;
-  return leftArm + rightArm;
-}
-
-function weaponBackSvg(weapon, grad, hero) {
-  if (weapon === "trident") return `<path d="M43 31 V117" stroke="#d8fff5" stroke-width="5" stroke-linecap="round"/><path d="M32 39 C37 47, 49 47, 54 39 M43 31 L33 48 M43 31 L53 48" fill="none" stroke="${hero.secondary}" stroke-width="4" stroke-linecap="round"/>`;
-  if (weapon === "staff") return `<path d="M119 28 L105 124" stroke="#efe9dc" stroke-width="5" stroke-linecap="round"/><circle cx="120" cy="28" r="11" fill="${grad}"/><path d="M120 14 L120 42 M106 28 H134" stroke="#fff8ec" stroke-width="3" opacity="0.56"/>`;
-  if (weapon === "bow") return `<path d="M126 40 C145 68, 145 101, 126 129" fill="none" stroke="${grad}" stroke-width="6" stroke-linecap="round"/><path d="M126 40 C132 70, 132 100, 126 129" fill="none" stroke="#fff8ec" stroke-width="2" opacity="0.7"/>`;
-  if (weapon === "mace") return `<path d="M111 43 L48 123" stroke="#e4e0d4" stroke-width="6" stroke-linecap="round"/><circle cx="113" cy="41" r="13" fill="${grad}"/><path d="M113 24 V58 M96 41 H130" stroke="#111313" stroke-width="4" opacity="0.44"/>`;
+function creatureFrontAccessory(spec) {
+  if (spec.accessory === "ember") {
+    return `<path d="M125 42 C141 60, 123 71, 135 90 C116 84, 107 67, 119 52 C123 47, 124 43, 125 42 Z" fill="${spec.accent}" opacity="0.86"/>`;
+  }
+  if (spec.accessory === "bulwark") {
+    return `<path d="M114 84 L143 96 L138 130 C134 145, 123 152, 114 156 C104 151, 96 144, 92 130 L88 96 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3"/><path d="M114 94 V145 M99 116 H130" stroke="${spec.accent}" stroke-width="5" opacity="0.7"/>`;
+  }
+  if (spec.accessory === "crystal") {
+    return `<path d="M125 39 L145 77 L126 112 L107 77 Z" fill="${spec.glow}" stroke="${spec.dark}" stroke-width="3" opacity="0.9"/><path d="M126 39 V112 M107 77 H145" stroke="#fff8ec" stroke-width="3" opacity="0.48"/>`;
+  }
+  if (spec.accessory === "orb") {
+    return `<circle cx="123" cy="82" r="20" fill="${spec.accent}" opacity="0.86"/><circle cx="123" cy="82" r="9" fill="${spec.dark}"/><circle cx="123" cy="82" r="4" fill="${spec.glow}"/><path d="M101 82 C111 65, 136 65, 146 82 C136 99, 111 99, 101 82 Z" fill="none" stroke="${spec.glow}" stroke-width="3" opacity="0.58"/>`;
+  }
   return "";
 }
-
-function weaponFrontSvg(weapon, grad, hero) {
-  if (weapon === "katana") return `<path d="M111 63 L41 127" stroke="#fff8ec" stroke-width="5" stroke-linecap="round"/><path d="M105 69 L117 81" stroke="${hero.secondary}" stroke-width="6" stroke-linecap="round"/>`;
-  if (weapon === "daggers") return `<path d="M34 98 L20 118" stroke="#fff8ec" stroke-width="4" stroke-linecap="round"/><path d="M126 98 L140 118" stroke="#fff8ec" stroke-width="4" stroke-linecap="round"/><path d="M31 102 L39 110 M129 102 L121 110" stroke="${hero.color}" stroke-width="4"/>`;
-  if (weapon === "claws") return `<path d="M36 105 L22 115 M39 109 L24 124 M42 112 L31 130" stroke="#f3eadc" stroke-width="4" stroke-linecap="round"/><path d="M124 105 L138 115 M121 109 L136 124 M118 112 L129 130" stroke="#f3eadc" stroke-width="4" stroke-linecap="round"/>`;
-  if (weapon === "flask") return `<path d="M116 91 L128 112" stroke="#d6d1c7" stroke-width="5" stroke-linecap="round"/><path d="M125 105 C116 113, 124 129, 136 125 C148 120, 139 103, 128 105 Z" fill="${grad}"/><circle cx="133" cy="115" r="4" fill="#fff8ec" opacity="0.65"/>`;
-  return "";
-}
-
-function offhandFxSvg(type, grad, hero) {
-  if (type === "ember") return `<path d="M38 90 C47 101, 35 105, 45 117 C34 114, 29 105, 34 96 C37 92, 36 90, 38 90 Z" fill="${grad}"/>`;
-  if (type === "towerShield") return `<path d="M109 82 L132 90 L128 119 C125 131, 116 137, 109 140 C101 137, 94 131, 91 119 L88 90 Z" fill="${grad}"/><path d="M109 90 V130 M96 108 H123" stroke="#eafffb" stroke-width="4" opacity="0.55"/>`;
-  if (type === "kiteShield") return `<path d="M112 79 L136 90 L130 119 C126 132, 116 138, 112 140 C106 137, 96 132, 92 119 L87 90 Z" fill="${grad}"/><path d="M112 89 V129 M99 106 H126" stroke="#111313" stroke-width="5" opacity="0.38"/>`;
-  if (type === "spark") return `<path d="M40 95 L30 113 H42 L35 131 L53 106 H42 Z" fill="${grad}"/><path d="M41 97 L36 110 H44" fill="none" stroke="#fff8ec" stroke-width="3" opacity="0.62"/>`;
-  if (type === "thorns") return `<path d="M118 99 C103 96, 100 112, 113 119 C127 126, 137 111, 128 101" fill="none" stroke="${hero.secondary}" stroke-width="5" stroke-linecap="round"/><path d="M106 108 L94 101 M117 119 L113 134 M129 105 L143 99" stroke="#cbe6a4" stroke-width="4" stroke-linecap="round"/>`;
-  if (type === "quiver") return `<path d="M102 70 L118 65 L126 114 L111 119 Z" fill="#252b2a"/><path d="M108 64 L113 100 M115 62 L118 100 M122 62 L121 101" stroke="#fff8ec" stroke-width="3" opacity="0.65"/>`;
-  if (type === "orb") return `<circle cx="42" cy="101" r="16" fill="${grad}" opacity="0.86"/><circle cx="42" cy="101" r="7" fill="#111313"/><path d="M24 101 C32 87, 53 87, 61 101 C53 115, 32 115, 24 101 Z" fill="none" stroke="#fff8ec" stroke-width="3" opacity="0.54"/>`;
-  if (type === "smoke") return `<path d="M35 100 C23 101, 22 116, 35 117 C47 117, 50 101, 38 98" fill="${hero.color}" opacity="0.32"/><path d="M27 111 C39 105, 47 112, 54 104" fill="none" stroke="${hero.secondary}" stroke-width="4" opacity="0.5" stroke-linecap="round"/>`;
-  return "";
-}
-
-function helmSvg(type, grad, hero) {
-  if (type === "topknot") return `<path d="M70 28 C76 17, 85 17, 90 28 C84 24, 76 24, 70 28 Z" fill="${hero.secondary}"/><path d="M79 21 L81 8" stroke="${hero.secondary}" stroke-width="5" stroke-linecap="round"/>`;
-  if (type === "crest") return `<path d="M62 38 C70 24, 91 24, 99 38 C92 31, 69 31, 62 38 Z" fill="${grad}"/><path d="M80 24 C75 14, 85 14, 80 24 Z" fill="#d8fff5"/>`;
-  if (type === "hood") return `<path d="M57 47 C58 25, 74 18, 80 18 C91 20, 103 30, 103 47 C94 38, 67 38, 57 47 Z" fill="#151819"/><path d="M63 46 C67 32, 92 32, 97 46" fill="none" stroke="${hero.color}" stroke-width="4" opacity="0.65"/>`;
-  if (type === "haloHelm") return `<path d="M61 40 C64 25, 96 25, 99 40 C90 35, 70 35, 61 40 Z" fill="${grad}"/><ellipse cx="80" cy="25" rx="22" ry="7" fill="none" stroke="${hero.secondary}" stroke-width="4" opacity="0.78"/>`;
-  if (type === "crown") return `<path d="M61 35 L67 22 L77 33 L80 18 L84 33 L94 22 L100 35 Z" fill="${grad}"/><circle cx="80" cy="19" r="4" fill="#fff8ec"/>`;
-  if (type === "horns") return `<path d="M65 34 C49 25, 48 12, 62 18 C57 22, 61 28, 70 34 Z" fill="#d8d0bb"/><path d="M95 34 C111 25, 112 12, 98 18 C103 22, 99 28, 90 34 Z" fill="#d8d0bb"/><path d="M60 43 C63 25, 97 25, 100 43" fill="${grad}"/>`;
-  if (type === "visor") return `<path d="M60 40 C64 27, 96 27, 100 40 L96 47 H64 Z" fill="${grad}"/><path d="M66 42 H94" stroke="#fff8ec" stroke-width="4" opacity="0.66"/>`;
-  if (type === "mask") return `<path d="M62 39 C64 25, 96 25, 98 39 C98 54, 89 63, 80 65 C71 63, 62 54, 62 39 Z" fill="#d6d1c7"/><path d="M67 43 H76 M84 43 H93" stroke="#111313" stroke-width="4" stroke-linecap="round"/><path d="M80 47 L76 56 H84 Z" fill="${hero.color}" opacity="0.7"/>`;
-  return "";
-}
-
 function heroSigil(hero) {
   const stroke = hero.secondary;
   const fill = hero.color;
@@ -1526,6 +1477,9 @@ function heroSigil(hero) {
   if (hero.shape === "void") return `<circle cx="128" cy="42" r="18" fill="${fill}" opacity="0.62"/><circle cx="128" cy="42" r="9" fill="#111313"/><circle cx="128" cy="42" r="4" fill="${stroke}"/>`;
   return "";
 }
+
+
+
 
 
 
