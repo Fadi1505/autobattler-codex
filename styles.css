@@ -1558,3 +1558,114 @@ button:disabled {
   height: 132%;
   transform: translate(-13%, -16%);
 }
+
+/* Real generated sprite/model assets */
+.sprite-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  display: grid;
+  place-items: end center;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.sprite-aura {
+  position: absolute;
+  inset: 8% 10% 10%;
+  z-index: 0;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--hero-color) 24%, transparent), transparent 66%);
+  filter: blur(8px);
+  opacity: 0.86;
+}
+
+.sprite-base {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  z-index: 1;
+  width: 56%;
+  aspect-ratio: 2.2;
+  transform: translateX(-50%) rotateX(58deg) rotateZ(45deg);
+  border: 2px solid color-mix(in srgb, var(--hero-secondary) 62%, transparent);
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(0,0,0,0.24));
+  box-shadow: 0 15px 24px rgba(0,0,0,0.34), inset 0 0 18px rgba(0,0,0,0.28);
+}
+
+.hero-sprite {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: auto;
+  max-width: 98%;
+  max-height: 106%;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 12px rgba(0,0,0,0.48)) drop-shadow(0 0 12px color-mix(in srgb, var(--hero-color) 38%, transparent));
+  user-select: none;
+  pointer-events: none;
+}
+
+.hero-art .sprite-stage {
+  min-height: 100%;
+  transform: translateY(2px);
+}
+
+.hero-art .hero-sprite {
+  max-width: 104%;
+  max-height: 112%;
+}
+
+.inspector-art .hero-sprite {
+  max-width: 96%;
+  max-height: 112%;
+}
+
+.mini-portrait .sprite-stage {
+  min-height: 100%;
+}
+
+.mini-portrait .sprite-aura,
+.mini-portrait .sprite-base {
+  display: none;
+}
+
+.mini-portrait .hero-sprite {
+  max-width: none;
+  max-height: none;
+  width: 155%;
+  transform: translateY(16%);
+}
+
+.fighter-portrait .sprite-stage {
+  min-height: 100%;
+}
+
+.fighter-portrait .sprite-aura {
+  inset: 0 0 4%;
+  filter: blur(14px);
+  opacity: 0.8;
+}
+
+.fighter-portrait .sprite-base {
+  bottom: 2%;
+  width: 60%;
+}
+
+.fighter-portrait .hero-sprite {
+  max-width: none;
+  max-height: none;
+  width: 130%;
+  transform: translateY(8%);
+  filter: drop-shadow(0 24px 18px rgba(0,0,0,0.58)) drop-shadow(0 0 18px color-mix(in srgb, var(--hero-color) 44%, transparent));
+}
+
+.fighter-right .fighter-portrait .hero-sprite {
+  transform: translateY(8%) scaleX(-1);
+}
+
+.inspector-art .hero-sprite {
+  max-width: 84%;
+  max-height: 102%;
+}

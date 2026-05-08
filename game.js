@@ -1261,226 +1261,24 @@ function clamp(value, min, max) {
 }
 
 function heroSvg(hero) {
-  const character = heroCharacter(hero);
-  const sigil = heroSigil(hero);
-  return `
-    <svg class="hero-model" viewBox="0 0 192 192" role="img" aria-label="${hero.name}">
-      <defs>
-        <linearGradient id="g-${hero.id}" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="${hero.color}"/>
-          <stop offset="1" stop-color="${hero.secondary}"/>
-        </linearGradient>
-        <linearGradient id="rim-${hero.id}" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#fff8ec" stop-opacity="0.36"/>
-          <stop offset="0.55" stop-color="${hero.secondary}" stop-opacity="0.16"/>
-          <stop offset="1" stop-color="#000" stop-opacity="0.28"/>
-        </linearGradient>
-        <radialGradient id="aura-${hero.id}" cx="50%" cy="40%" r="60%">
-          <stop offset="0" stop-color="${hero.secondary}" stop-opacity="0.42"/>
-          <stop offset="0.48" stop-color="${hero.color}" stop-opacity="0.22"/>
-          <stop offset="1" stop-color="${hero.color}" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="ground-${hero.id}" cx="50%" cy="42%" r="64%">
-          <stop offset="0" stop-color="${hero.secondary}" stop-opacity="0.28"/>
-          <stop offset="0.48" stop-color="#33413c" stop-opacity="0.98"/>
-          <stop offset="1" stop-color="#171c1a" stop-opacity="1"/>
-        </radialGradient>
-        <filter id="shadow-${hero.id}" x="-45%" y="-45%" width="190%" height="190%">
-          <feDropShadow dx="0" dy="11" stdDeviation="7" flood-color="#000" flood-opacity="0.55"/>
-          <feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="${hero.color}" flood-opacity="0.4"/>
-        </filter>
-      </defs>
-      <rect width="192" height="192" rx="12" fill="#101313"/>
-      <path d="M0 121 C33 94, 48 68, 96 58 C142 68, 164 96, 192 123 L192 192 L0 192 Z" fill="url(#aura-${hero.id})"/>
-      <path d="M96 121 L162 151 L96 182 L30 151 Z" fill="url(#ground-${hero.id})" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
-      <path d="M96 121 L162 151 L96 182 L30 151 Z M63 136 L129 166 M129 136 L63 166 M96 121 V182 M30 151 H162" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
-      <path d="M96 133 L148 154 L96 177 L44 154 Z" fill="none" stroke="${hero.secondary}" stroke-width="2" opacity="0.38"/>
-      <ellipse cx="96" cy="150" rx="48" ry="17" fill="rgba(0,0,0,0.46)"/>
-      <g transform="translate(16 7) scale(1.02)" filter="url(#shadow-${hero.id})">
-        ${character}
-      </g>
-      <path d="M31 151 L96 181 L96 188 L29 156 Z" fill="#090b0b" opacity="0.38"/>
-      <path d="M162 151 L96 181 L96 188 L164 156 Z" fill="#060707" opacity="0.52"/>
-      <g transform="translate(16 8)">${sigil}</g>
-      <path d="M18 24 C46 5, 145 6, 174 25" fill="none" stroke="url(#rim-${hero.id})" stroke-width="2" opacity="0.68"/>
-    </svg>
-  `;
+  return heroSpriteMarkup(hero, "hero-card-sprite", "hero model preview");
 }
+
 function heroUnitSvg(hero) {
-  const character = heroCharacter(hero);
-  const sigil = heroSigil(hero);
+  return heroSpriteMarkup(hero, "hero-combat-sprite", "combat unit");
+}
+
+function heroSpriteMarkup(hero, variant, label) {
   return `
-    <svg class="hero-unit" viewBox="0 0 180 180" role="img" aria-label="${hero.name}">
-      <defs>
-        <linearGradient id="unit-g-${hero.id}" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="${hero.color}"/>
-          <stop offset="1" stop-color="${hero.secondary}"/>
-        </linearGradient>
-        <radialGradient id="unit-aura-${hero.id}" cx="50%" cy="42%" r="58%">
-          <stop offset="0" stop-color="${hero.secondary}" stop-opacity="0.38"/>
-          <stop offset="0.5" stop-color="${hero.color}" stop-opacity="0.18"/>
-          <stop offset="1" stop-color="${hero.color}" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="unit-shadow-${hero.id}" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="13" stdDeviation="7" flood-color="#000" flood-opacity="0.55"/>
-          <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="${hero.color}" flood-opacity="0.34"/>
-        </filter>
-      </defs>
-      <ellipse cx="90" cy="140" rx="57" ry="20" fill="rgba(0,0,0,0.48)"/>
-      <path d="M90 112 L148 139 L90 168 L32 139 Z" fill="url(#unit-aura-${hero.id})" stroke="${hero.secondary}" stroke-width="2" opacity="0.78"/>
-      <path d="M90 112 L148 139 L90 168 L32 139 Z M61 126 L119 153 M119 126 L61 153" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>
-      <g transform="translate(9 -5) scale(1.02)" filter="url(#unit-shadow-${hero.id})">
-        ${character.replaceAll(`url(#g-${hero.id})`, `url(#unit-g-${hero.id})`)}
-      </g>
-      <g transform="translate(10 -2) scale(0.78)" opacity="0.72">${sigil.replaceAll(`url(#g-${hero.id})`, `url(#unit-g-${hero.id})`)}</g>
-    </svg>
-  `;
-}
-function heroCharacter(hero) {
-  const specs = {
-    flame: {
-      base: "#5d5a55", mid: "#77736c", light: "#aaa59a", dark: "#2b2a29",
-      accent: "#ef684a", glow: "#ffc45a", eyes: "#171b1c", patch: "magma", accessory: "ember"
-    },
-    tide: {
-      base: "#b8c2bd", mid: "#d2d9d4", light: "#f1f4ee", dark: "#68736f",
-      accent: "#53b7c8", glow: "#8ff0dc", eyes: "#0b3142", patch: "water", accessory: "shell"
-    },
-    veil: {
-      base: "#3e3a54", mid: "#5b5480", light: "#8f86c8", dark: "#151521",
-      accent: "#8d74df", glow: "#56d4cf", eyes: "#05070a", patch: "shadow", accessory: "crescent"
-    },
-    iron: {
-      base: "#aeb3b9", mid: "#d6d3ca", light: "#fff4d4", dark: "#636a70",
-      accent: "#d9b85d", glow: "#fff0ad", eyes: "#172637", patch: "gold", accessory: "bulwark"
-    },
-    storm: {
-      base: "#b9c8d9", mid: "#dfe9f3", light: "#ffffff", dark: "#63758a",
-      accent: "#5f91d8", glow: "#d9f2ff", eyes: "#0d2744", patch: "lightning", accessory: "rod"
-    },
-    thorn: {
-      base: "#8e9278", mid: "#b6aa7e", light: "#d8d0a6", dark: "#4a513f",
-      accent: "#7fb069", glow: "#d8ef9f", eyes: "#182513", patch: "moss", accessory: "horns"
-    },
-    prism: {
-      base: "#caa04b", mid: "#f0bc5a", light: "#ffe6a0", dark: "#6a4528",
-      accent: "#f2b84b", glow: "#fff2b7", eyes: "#1f1710", patch: "crystal", accessory: "crystal"
-    },
-    void: {
-      base: "#51405f", mid: "#725687", light: "#b293d0", dark: "#17101f",
-      accent: "#c47adf", glow: "#6de0db", eyes: "#050608", patch: "void", accessory: "orb"
-    }
-  };
-  return creatureModel(hero, specs[hero.shape] || specs.thorn);
-}
-
-function creatureModel(hero, spec) {
-  return `
-    <g class="model-creature">
-      <ellipse cx="80" cy="141" rx="48" ry="13" fill="rgba(0,0,0,0.34)"/>
-      ${creatureBackAccessory(spec)}
-      <path d="M48 81 C35 91, 27 111, 25 131 C31 139, 43 136, 49 127 C50 115, 55 101, 66 94 Z" fill="${spec.dark}"/>
-      <path d="M112 81 C126 91, 135 112, 137 133 C131 141, 118 138, 111 128 C110 115, 105 101, 94 94 Z" fill="${spec.dark}"/>
-      <path d="M42 92 L57 83 L70 95 L57 116 L39 113 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M118 92 L103 83 L90 95 L103 116 L121 113 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M31 112 L55 105 L66 124 L54 149 L28 143 L20 126 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M129 112 L105 105 L94 124 L106 149 L132 143 L140 126 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M57 79 L75 67 L96 68 L111 83 L106 116 L94 131 L65 131 L52 116 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M66 86 L80 76 L94 86 L92 110 L80 120 L67 110 Z" fill="${spec.mid}" opacity="0.92"/>
-      <path d="M65 130 L78 130 L75 151 L61 154 L54 145 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M95 130 L82 130 L85 151 L99 154 L106 145 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M53 150 L76 148 L82 158 L67 166 L49 162 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M107 150 L84 148 L78 158 L93 166 L111 162 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M44 42 C45 24, 60 14, 82 13 C105 14, 121 27, 123 47 C125 66, 111 78, 88 82 C66 83, 48 74, 44 55 Z" fill="${spec.base}" stroke="${spec.dark}" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M53 34 L76 20 L103 24 L117 42 L104 58 L76 63 L53 54 Z" fill="${spec.mid}" opacity="0.88"/>
-      <path d="M49 50 L64 62 L61 72 L48 63 Z" fill="${spec.dark}" opacity="0.42"/>
-      <path d="M115 49 L99 62 L102 72 L116 62 Z" fill="${spec.dark}" opacity="0.42"/>
-      <path d="M67 47 C65 38, 72 33, 79 37 C84 40, 84 50, 77 54 C71 57, 68 53, 67 47 Z" fill="${spec.eyes}"/>
-      <path d="M94 47 C92 38, 99 33, 106 37 C111 40, 111 50, 104 54 C98 57, 95 53, 94 47 Z" fill="${spec.eyes}"/>
-      <circle cx="76" cy="42" r="3" fill="#ffffff" opacity="0.75"/>
-      <circle cx="103" cy="42" r="3" fill="#ffffff" opacity="0.75"/>
-      <path d="M76 61 L90 60 L96 68 L82 72 Z" fill="${spec.light}" opacity="0.58"/>
-      <path d="M59 28 C71 17, 95 18, 109 29" fill="none" stroke="${spec.light}" stroke-width="4" opacity="0.36" stroke-linecap="round"/>
-      <path d="M60 88 L75 77 M87 77 L103 90 M62 111 L79 120 M98 120 L107 104 M37 124 L58 117 M122 123 L103 117" fill="none" stroke="${spec.dark}" stroke-width="3" opacity="0.42" stroke-linecap="round"/>
-      ${creatureElementPatches(spec)}
-      ${creatureFrontAccessory(spec)}
-    </g>
+    <div class="sprite-stage ${variant}" style="--hero-color: ${hero.color}; --hero-secondary: ${hero.secondary}" role="img" aria-label="${hero.name} ${label}">
+      <span class="sprite-aura"></span>
+      <span class="sprite-base"></span>
+      <img class="hero-sprite" src="${heroSpritePath(hero)}" alt="${hero.name}" draggable="false">
+    </div>
   `;
 }
 
-function creatureElementPatches(spec) {
-  const fill = spec.accent;
-  const glow = spec.glow;
-  const common = `
-    <path d="M61 25 C71 20, 78 25, 73 35 C65 38, 57 34, 61 25 Z" fill="${fill}" opacity="0.88"/>
-    <path d="M101 28 C112 27, 118 34, 112 42 C104 44, 97 38, 101 28 Z" fill="${fill}" opacity="0.82"/>
-    <path d="M56 91 C65 87, 72 92, 68 101 C59 104, 52 99, 56 91 Z" fill="${fill}" opacity="0.82"/>
-    <path d="M110 111 C122 108, 128 117, 121 128 C110 129, 104 121, 110 111 Z" fill="${fill}" opacity="0.84"/>
-    <path d="M34 121 C43 116, 51 122, 47 133 C37 136, 30 130, 34 121 Z" fill="${fill}" opacity="0.82"/>
-  `;
-  if (spec.patch === "magma") {
-    return common + `<path d="M72 83 L84 102 L78 123 M95 89 L88 108" fill="none" stroke="${glow}" stroke-width="5" stroke-linecap="round" opacity="0.82"/>`;
-  }
-  if (spec.patch === "lightning") {
-    return common + `<path d="M82 76 L70 105 H82 L73 132 L99 94 H84 Z" fill="${glow}" opacity="0.82"/>`;
-  }
-  if (spec.patch === "crystal") {
-    return common + `<path d="M80 74 L96 94 L81 119 L65 94 Z" fill="${glow}" opacity="0.78"/><path d="M81 74 V119 M65 94 H96" stroke="#fff8ec" stroke-width="2" opacity="0.55"/>`;
-  }
-  if (spec.patch === "void") {
-    return common + `<circle cx="82" cy="100" r="15" fill="${fill}" opacity="0.78"/><circle cx="82" cy="100" r="7" fill="${spec.dark}"/><circle cx="82" cy="100" r="3" fill="${glow}"/>`;
-  }
-  return common;
+function heroSpritePath(hero) {
+  return `assets/heroes/${hero.id}.png`;
 }
-
-function creatureBackAccessory(spec) {
-  if (spec.accessory === "horns") {
-    return `<path d="M55 35 C34 21, 36 7, 53 15 C49 20, 51 28, 65 38 Z" fill="${spec.light}" stroke="${spec.dark}" stroke-width="3"/><path d="M105 35 C126 21, 124 7, 107 15 C111 20, 109 28, 95 38 Z" fill="${spec.light}" stroke="${spec.dark}" stroke-width="3"/>`;
-  }
-  if (spec.accessory === "rod") {
-    return `<path d="M126 32 L116 127" stroke="${spec.light}" stroke-width="6" stroke-linecap="round"/><circle cx="127" cy="31" r="12" fill="${spec.glow}"/><path d="M127 13 V49 M109 31 H145" stroke="#fff" stroke-width="3" opacity="0.55"/>`;
-  }
-  if (spec.accessory === "shell") {
-    return `<path d="M31 67 C20 50, 31 33, 51 34 C42 45, 42 58, 55 70 Z" fill="${spec.glow}" opacity="0.58"/>`;
-  }
-  if (spec.accessory === "crescent") {
-    return `<circle cx="121" cy="34" r="16" fill="${spec.accent}" opacity="0.38"/><circle cx="128" cy="30" r="15" fill="#111313"/>`;
-  }
-  return "";
-}
-
-function creatureFrontAccessory(spec) {
-  if (spec.accessory === "ember") {
-    return `<path d="M125 42 C141 60, 123 71, 135 90 C116 84, 107 67, 119 52 C123 47, 124 43, 125 42 Z" fill="${spec.accent}" opacity="0.86"/>`;
-  }
-  if (spec.accessory === "bulwark") {
-    return `<path d="M114 84 L143 96 L138 130 C134 145, 123 152, 114 156 C104 151, 96 144, 92 130 L88 96 Z" fill="${spec.mid}" stroke="${spec.dark}" stroke-width="3"/><path d="M114 94 V145 M99 116 H130" stroke="${spec.accent}" stroke-width="5" opacity="0.7"/>`;
-  }
-  if (spec.accessory === "crystal") {
-    return `<path d="M125 39 L145 77 L126 112 L107 77 Z" fill="${spec.glow}" stroke="${spec.dark}" stroke-width="3" opacity="0.9"/><path d="M126 39 V112 M107 77 H145" stroke="#fff8ec" stroke-width="3" opacity="0.48"/>`;
-  }
-  if (spec.accessory === "orb") {
-    return `<circle cx="123" cy="82" r="20" fill="${spec.accent}" opacity="0.86"/><circle cx="123" cy="82" r="9" fill="${spec.dark}"/><circle cx="123" cy="82" r="4" fill="${spec.glow}"/><path d="M101 82 C111 65, 136 65, 146 82 C136 99, 111 99, 101 82 Z" fill="none" stroke="${spec.glow}" stroke-width="3" opacity="0.58"/>`;
-  }
-  return "";
-}
-function heroSigil(hero) {
-  const stroke = hero.secondary;
-  const fill = hero.color;
-  if (hero.shape === "flame") return `<path d="M127 31 C138 46, 125 54, 134 68 C119 63, 112 50, 121 39 C124 35, 125 32, 127 31 Z" fill="${fill}" opacity="0.76"/>`;
-  if (hero.shape === "tide") return `<path d="M25 50 C39 38, 51 41, 58 53 C47 50, 39 54, 34 64 C30 59, 27 55, 25 50 Z" fill="${fill}" opacity="0.78"/>`;
-  if (hero.shape === "veil") return `<circle cx="129" cy="36" r="13" fill="${fill}" opacity="0.38"/><circle cx="134" cy="34" r="12" fill="#111313"/>`;
-  if (hero.shape === "iron") return `<path d="M28 34 V66 M14 50 H42" stroke="${stroke}" stroke-width="5" stroke-linecap="round" opacity="0.75"/>`;
-  if (hero.shape === "storm") return `<path d="M31 27 L17 55 H31 L24 76 L47 43 H32 Z" fill="${stroke}" opacity="0.82"/>`;
-  if (hero.shape === "thorn") return `<path d="M25 72 C39 55, 50 51, 60 38 M38 59 L26 52 M45 51 L44 36" stroke="${stroke}" stroke-width="5" stroke-linecap="round" opacity="0.66"/>`;
-  if (hero.shape === "prism") return `<path d="M129 24 L145 47 L129 70 L113 47 Z" fill="${fill}" opacity="0.78"/><path d="M129 24 V70 M113 47 H145" stroke="#fff8ec" stroke-width="3" opacity="0.52"/>`;
-  if (hero.shape === "void") return `<circle cx="128" cy="42" r="18" fill="${fill}" opacity="0.62"/><circle cx="128" cy="42" r="9" fill="#111313"/><circle cx="128" cy="42" r="4" fill="${stroke}"/>`;
-  return "";
-}
-
-
-
-
-
-
 
