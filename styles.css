@@ -1669,3 +1669,430 @@ button:disabled {
   max-width: 84%;
   max-height: 102%;
 }
+
+/* Mobile battler polish */
+body[data-screen="game"] {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(242, 184, 75, 0.1), transparent 24%),
+    radial-gradient(circle at 80% 4%, rgba(82, 183, 177, 0.11), transparent 24%),
+    linear-gradient(145deg, #151312 0%, #0d1010 48%, #111713 100%);
+}
+
+.screen {
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.standing-row {
+  grid-template-columns: 28px 34px 1fr 44px;
+}
+
+.standing-avatar {
+  width: 34px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--hero-color) 42%, rgba(255,255,255,0.12));
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--hero-color) 26%, transparent), transparent 54%),
+    rgba(12, 14, 14, 0.88);
+}
+
+.standing-avatar .sprite-stage {
+  min-height: 100%;
+}
+
+.standing-avatar .sprite-aura,
+.standing-avatar .sprite-base,
+.standing-avatar .sprite-shadow {
+  display: none;
+}
+
+.standing-avatar .hero-sprite {
+  width: 176%;
+  max-width: none;
+  max-height: none;
+  transform: translateY(18%);
+}
+
+.sprite-stage {
+  transform-style: preserve-3d;
+}
+
+.sprite-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  z-index: 1;
+  width: 72%;
+  height: 18%;
+  border-radius: 999px;
+  transform: translateX(-50%) rotateX(64deg);
+  background: radial-gradient(ellipse, rgba(0,0,0,0.48), transparent 72%);
+  filter: blur(3px);
+}
+
+.hero-mini-sprite .sprite-aura,
+.hero-mini-sprite .sprite-base,
+.hero-mini-sprite .sprite-shadow {
+  display: none;
+}
+
+.hero-mini-sprite .hero-sprite {
+  width: 160%;
+  max-width: none;
+  max-height: none;
+  transform: translateY(17%);
+}
+
+.fighter-portrait {
+  contain: layout;
+}
+
+.fighter-portrait .sprite-stage {
+  animation: spriteBreath 2600ms ease-in-out infinite;
+}
+
+.fighter-left .fighter-portrait .sprite-stage {
+  animation-delay: -420ms;
+}
+
+.fighter.shielded .sprite-base {
+  border-color: color-mix(in srgb, var(--teal) 76%, transparent);
+  box-shadow:
+    0 15px 24px rgba(0,0,0,0.34),
+    0 0 20px color-mix(in srgb, var(--teal) 42%, transparent),
+    inset 0 0 18px rgba(0,0,0,0.28);
+}
+
+.fighter.charged .sprite-aura {
+  opacity: 1;
+  animation: chargedAura 1050ms ease-in-out infinite;
+}
+
+.fighter.low-health .hero-sprite {
+  filter:
+    drop-shadow(0 24px 18px rgba(0,0,0,0.58))
+    drop-shadow(0 0 18px rgba(236,91,75,0.45))
+    saturate(0.82);
+}
+
+.fighter.dead {
+  pointer-events: none;
+}
+
+.fighter.dead .fighter-portrait {
+  animation: fallBack 560ms ease forwards;
+  opacity: 0.58;
+  filter: grayscale(0.75) drop-shadow(0 18px 14px rgba(0,0,0,0.52));
+}
+
+.fighter.victory .fighter-portrait {
+  animation: victoryPop 900ms cubic-bezier(.18,.9,.26,1.12);
+}
+
+.fighter.dodging.fighter-left .fighter-portrait {
+  animation: dodgeLeft 420ms ease;
+}
+
+.fighter.dodging.fighter-right .fighter-portrait {
+  animation: dodgeRight 420ms ease;
+}
+
+.fighter.guarding .fighter-portrait {
+  animation: guardPulse 560ms ease;
+}
+
+.fighter.casting .sprite-aura,
+.fighter.guarding .sprite-aura {
+  opacity: 1;
+}
+
+.arena-board {
+  border-color: rgba(255,255,255,0.13);
+}
+
+.arena-board .fighter-left {
+  left: 5%;
+  bottom: 30px;
+}
+
+.arena-board .fighter-right {
+  right: 6%;
+  bottom: 112px;
+}
+
+.arena-board .fighter-portrait {
+  width: min(300px, 100%);
+}
+
+.fighter-portrait .hero-sprite {
+  width: 144%;
+  transform: translateY(7%);
+}
+
+.fighter-right .fighter-portrait .hero-sprite {
+  transform: translateY(7%) scaleX(-1);
+}
+
+.arena-board .round-result {
+  top: 40%;
+  width: min(250px, 46%);
+  letter-spacing: 0;
+}
+
+.shop-card,
+.upgrade-tile,
+.standing-row,
+.ability-tile,
+.fighter-info {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.shop-card:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+@keyframes spriteBreath {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.012); }
+}
+
+@keyframes chargedAura {
+  0%, 100% {
+    filter: blur(10px);
+    transform: scale(1);
+  }
+  50% {
+    filter: blur(16px);
+    transform: scale(1.1);
+  }
+}
+
+@keyframes victoryPop {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-22px) scale(1.08); }
+  62% { transform: translateY(-10px) scale(1.03); }
+}
+
+@keyframes fallBack {
+  0% { transform: translateY(0) rotate(0deg) scale(1); }
+  100% { transform: translateY(26px) rotate(-6deg) scale(0.92); }
+}
+
+@keyframes dodgeLeft {
+  35% { transform: translate(-42px, -16px) scale(0.98); }
+  72% { transform: translate(14px, -4px) scale(1.02); }
+}
+
+@keyframes dodgeRight {
+  35% { transform: translate(42px, 10px) scale(0.98); }
+  72% { transform: translate(-14px, 4px) scale(1.02); }
+}
+
+@keyframes guardPulse {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.045); filter: drop-shadow(0 0 24px var(--teal)); }
+}
+
+@media (max-width: 1180px) {
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.56fr);
+  }
+
+  .arena-section {
+    grid-column: 1 / -1;
+  }
+
+  .stats-section {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .screen {
+    padding: 10px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+
+  .game-header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin: -10px -10px 12px;
+    padding: max(10px, env(safe-area-inset-top)) 10px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.09);
+    background: rgba(13, 16, 16, 0.88);
+    backdrop-filter: blur(12px);
+  }
+
+  .identity {
+    width: 100%;
+  }
+
+  .game-header h1 {
+    font-size: 27px;
+    line-height: 1;
+  }
+
+  .mini-portrait {
+    width: 54px;
+  }
+
+  .top-meters {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 50px;
+    gap: 8px;
+  }
+
+  .meter-pill {
+    min-width: 0;
+    min-height: 44px;
+    padding: 6px 8px;
+  }
+
+  .meter-pill strong {
+    font-size: 19px;
+  }
+
+  .icon-button {
+    width: 44px;
+    min-height: 44px;
+    justify-self: end;
+  }
+
+  .arena-toolbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+
+  .combat-actions {
+    justify-content: flex-end;
+  }
+
+  .combat-actions .primary-button,
+  .combat-actions .secondary-button {
+    min-width: 96px;
+    min-height: 42px;
+  }
+
+  .arena-board {
+    position: relative;
+    height: min(68vh, 560px);
+    min-height: 500px;
+    padding: 0;
+  }
+
+  .arena-board::before {
+    inset: auto -18% 118px;
+    height: 300px;
+    transform: rotateX(58deg);
+  }
+
+  .arena-board .fighter {
+    position: absolute;
+    width: 52%;
+    max-width: 218px;
+  }
+
+  .arena-board .fighter-left {
+    left: 0;
+    bottom: 54px;
+    transform: none;
+  }
+
+  .arena-board .fighter-right {
+    right: 4%;
+    bottom: 178px;
+    transform: scale(0.88);
+  }
+
+  .arena-board .fighter-portrait {
+    width: min(225px, 100%);
+  }
+
+  .fighter-portrait .hero-sprite {
+    width: 132%;
+  }
+
+  .arena-board .fighter-info {
+    width: min(205px, 94%);
+    padding: 8px;
+  }
+
+  .arena-board .round-result {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    width: min(190px, 50%);
+    min-height: 52px;
+    transform: translate(-50%, -50%);
+    font-size: 34px;
+  }
+
+  .ability-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ability-tile {
+    padding: 10px;
+  }
+
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shop-card {
+    min-height: 128px;
+    padding: 10px;
+  }
+
+  .shop-card h3 {
+    font-size: 14px;
+  }
+
+  .shop-card p {
+    font-size: 12px;
+  }
+
+  .upgrade-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .standing-row {
+    min-height: 50px;
+  }
+}
+
+@media (max-width: 430px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .arena-board {
+    min-height: 472px;
+  }
+
+  .arena-board .fighter-left {
+    left: -3%;
+    bottom: 50px;
+  }
+
+  .arena-board .fighter-right {
+    right: 0;
+    bottom: 172px;
+  }
+
+  .fighter-info {
+    font-size: 12px;
+  }
+
+  .shop-grid {
+    gap: 8px;
+  }
+}

@@ -353,6 +353,7 @@ function resetToDraft() {
 function setScreen(screen) {
   el.draftScreen.classList.toggle("active", screen === "draft");
   el.gameScreen.classList.toggle("active", screen === "game");
+  document.body.dataset.screen = screen;
 }
 
 function createPlayer(id, name, heroId, isUser) {
@@ -374,7 +375,7 @@ function renderGame() {
   const hero = getHero(player.heroId);
   const opponent = getOpponent();
 
-  el.playerPortrait.innerHTML = heroUnitSvg(hero);
+  renderFighterPortrait(el.playerPortrait, hero, "header");
   el.playerName.textContent = hero.name;
   el.roundValue.textContent = state.round;
   el.goldValue.textContent = state.gold;
@@ -412,23 +413,24 @@ function renderIdleFighters() {
   const leftStats = getStats(player);
   const rightStats = opponent ? getStats(opponent) : leftStats;
 
-  el.leftPortrait.innerHTML = heroUnitSvg(getHero(player.heroId));
-  el.leftPortrait.parentElement.style.setProperty("--hero-color", getHero(player.heroId).color);
+  const playerHero = getHero(player.heroId);
+  renderFighterPortrait(el.leftPortrait, playerHero, "combat");
+  applyFighterState(el.leftPortrait.parentElement, null);
   el.leftName.textContent = player.name;
   el.leftShield.textContent = leftStats.startShield;
   setBar(el.leftHpBar, 100);
   setBar(el.leftManaBar, 0);
 
   if (opponent) {
-    el.rightPortrait.innerHTML = heroUnitSvg(getHero(opponent.heroId));
-    el.rightPortrait.parentElement.style.setProperty("--hero-color", getHero(opponent.heroId).color);
+    renderFighterPortrait(el.rightPortrait, getHero(opponent.heroId), "combat");
+    applyFighterState(el.rightPortrait.parentElement, null);
     el.rightName.textContent = opponent.name;
     el.rightShield.textContent = rightStats.startShield;
     setBar(el.rightHpBar, 100);
     setBar(el.rightManaBar, 0);
   }
 
-  el.roundResult.textContent = state.lastResult;
+  el.roundResult.textContent = state.lastResult || "VS";
   setBar(el.passiveCooldown, 0);
   setBar(el.ultimateCharge, 0);
   if (!state.combat) {
@@ -487,8 +489,9 @@ function renderStandings() {
   el.standingsList.innerHTML = sorted.map((player, index) => {
     const hero = getHero(player.heroId);
     return `
-      <div class="standing-row ${player.isUser ? "you" : ""} ${player.alive ? "" : "eliminated"}">
+      <div class="standing-row ${player.isUser ? "you" : ""} ${player.alive ? "" : "eliminated"}" style="--hero-color: ${hero.color}; --hero-secondary: ${hero.secondary}">
         <span class="standing-rank" style="background:${player.isUser ? categories.critical.color : hero.color}">${index + 1}</span>
+        <span class="standing-avatar">${heroMiniSprite(hero)}</span>
         <span class="standing-name">
           <strong>${player.name}</strong>
           <span>${hero.name}</span>
@@ -561,6 +564,8 @@ function createUnit(player, side) {
     mana: 0,
     attackTimer: 650,
     passiveTimer: stats.passiveCooldown,
+    pose: "idle",
+    poseUntil: 0,
     buffs: {
       focus: false,
       evasion: 0,
@@ -627,6 +632,7 @@ function tickUnit(unit, enemy) {
 }
 
 function basicAttack(unit, enemy) {
+  setUnitPose(unit, "attacking", 430);
   flash(unit.side, "attacking");
   playStrikeEffect(unit, enemy);
   dealDamage(unit, enemy, unit.stats.attack, {
@@ -638,6 +644,7 @@ function basicAttack(unit, enemy) {
 }
 function castPassive(unit, enemy) {
   const upgrades = unit.player.upgrades;
+  setUnitPose(unit, "casting", 680);
   flash(unit.side, "casting");
   playCastName(unit, unit.hero.passive.name, false);
   playHeroEffect("passive", unit, enemy);
@@ -697,6 +704,7 @@ function castPassive(unit, enemy) {
 
 function castUltimate(unit, enemy) {
   const upgrades = unit.player.upgrades;
+  setUnitPose(unit, "casting", 920);
   flash(unit.side, "casting");
   addLog(`${unitLabel(unit)} unleashes <strong>${unit.hero.ultimate.name}</strong>.`);
   playCastName(unit, unit.hero.ultimate.name, true);
@@ -773,6 +781,7 @@ function dealDamage(unit, enemy, rawAmount, options = {}) {
   if (options.canDodge && Math.random() < dodgeChance) {
     gainMana(enemy, 6 + enemy.player.upgrades.mana);
     addLog(`${unitLabel(enemy)} evades ${unitLabel(unit)}.`);
+    setUnitPose(enemy, "dodging", 540);
     flash(enemy.side, "casting");
     playDodgeEffect(enemy);
     playFloatText(enemy.side, "DODGE", enemy.hero.color, enemy.hero.secondary);
@@ -806,6 +815,7 @@ function dealDamage(unit, enemy, rawAmount, options = {}) {
   addLog(`${unitLabel(unit)} ${label} ${unitLabel(enemy)} for <strong>${parts.join(", ")}</strong>.`);
   playImpactEffect(enemy, crit ? "critical" : "hit", unit.hero.color, unit.hero.secondary);
   playFloatText(enemy.side, `${crit ? "CRIT " : ""}${amount}`, crit ? categories.critical.color : unit.hero.color, unit.hero.secondary);
+  setUnitPose(enemy, "hit", 380);
   flash(enemy.side, "hit");
   return amount;
 }
@@ -818,6 +828,7 @@ function gainShield(unit, amount) {
   const cap = unit.stats.startShield + 120 + unit.player.upgrades.shield * 16;
   unit.shield = Math.min(cap, Math.round(unit.shield + amount));
   addLog(`${unitLabel(unit)} gains <strong>${Math.round(amount)} shield</strong>.`);
+  setUnitPose(unit, "guarding", 620);
   playShieldEffect(unit);
   playFloatText(unit.side, `+${Math.round(amount)} shield`, categories.shield.color, unit.hero.secondary);
 }
@@ -828,6 +839,7 @@ function heal(unit, amount) {
   const healed = unit.hp - before;
   if (healed > 0) {
     addLog(`${unitLabel(unit)} heals <strong>${healed}</strong>.`);
+    setUnitPose(unit, "guarding", 620);
     playHealEffect(unit);
     playFloatText(unit.side, `+${healed}`, categories.defense.color, "#fff8ec");
   }
@@ -842,6 +854,11 @@ function finishCombat(winnerSide) {
   const user = getUser();
   const opponent = combat.right.player;
   const damage = roundDamage();
+  const winnerUnit = winnerSide === "left" ? combat.left : combat.right;
+  const loserUnit = winnerSide === "left" ? combat.right : combat.left;
+  setUnitPose(winnerUnit, "victory", 1600);
+  setUnitPose(loserUnit, "dead", 200000);
+  playFloatText(winnerUnit.side, "VICTORY", categories.critical.color, winnerUnit.hero.secondary);
 
   if (userWon) {
     opponent.health -= damage;
@@ -891,10 +908,10 @@ function renderCombat() {
   const left = combat.left;
   const right = combat.right;
 
-  el.leftPortrait.innerHTML = heroUnitSvg(left.hero);
-  el.rightPortrait.innerHTML = heroUnitSvg(right.hero);
-  el.leftPortrait.parentElement.style.setProperty("--hero-color", left.hero.color);
-  el.rightPortrait.parentElement.style.setProperty("--hero-color", right.hero.color);
+  renderFighterPortrait(el.leftPortrait, left.hero, "combat");
+  renderFighterPortrait(el.rightPortrait, right.hero, "combat");
+  applyFighterState(el.leftPortrait.parentElement, left);
+  applyFighterState(el.rightPortrait.parentElement, right);
   el.leftName.textContent = left.player.name;
   el.rightName.textContent = right.player.name;
   el.leftShield.textContent = Math.round(left.shield);
@@ -913,6 +930,51 @@ function renderCombat() {
 function addLog(message) {
   if (!state.combat) return;
   state.combat.logs.push(message);
+}
+
+function renderFighterPortrait(container, hero, variant) {
+  if (!container || !hero) return;
+  const key = `${variant}:${hero.id}`;
+  if (container.dataset.portraitKey !== key) {
+    container.innerHTML = variant === "header" ? heroMiniSprite(hero) : heroUnitSvg(hero);
+    container.dataset.portraitKey = key;
+  }
+  container.style.setProperty("--hero-color", hero.color);
+  container.style.setProperty("--hero-secondary", hero.secondary);
+  const fighter = container.closest(".fighter");
+  if (fighter) {
+    fighter.style.setProperty("--hero-color", hero.color);
+    fighter.style.setProperty("--hero-secondary", hero.secondary);
+  }
+}
+
+function applyFighterState(node, unit) {
+  if (!node) return;
+  const dynamicClasses = [
+    "attacking", "casting", "hit", "dodging", "guarding",
+    "dead", "victory", "low-health", "charged", "shielded"
+  ];
+  node.classList.remove(...dynamicClasses);
+  if (!unit) return;
+
+  const pose = activePose(unit);
+  if (pose) node.classList.add(pose);
+  if (!isAlive(unit) || pose === "dead") node.classList.add("dead");
+  if (unit.hp / unit.stats.maxHp <= 0.32) node.classList.add("low-health");
+  if (unit.mana >= 82) node.classList.add("charged");
+  if (unit.shield > 0) node.classList.add("shielded");
+}
+
+function activePose(unit) {
+  const combat = state.combat;
+  if (!combat || !unit.pose || unit.poseUntil <= combat.elapsed) return "";
+  return unit.pose;
+}
+
+function setUnitPose(unit, pose, duration) {
+  if (!unit || !state.combat) return;
+  unit.pose = pose;
+  unit.poseUntil = state.combat.elapsed + duration;
 }
 
 function flash(side, className) {
@@ -1268,10 +1330,15 @@ function heroUnitSvg(hero) {
   return heroSpriteMarkup(hero, "hero-combat-sprite", "combat unit");
 }
 
+function heroMiniSprite(hero) {
+  return heroSpriteMarkup(hero, "hero-mini-sprite", "miniature portrait");
+}
+
 function heroSpriteMarkup(hero, variant, label) {
   return `
-    <div class="sprite-stage ${variant}" style="--hero-color: ${hero.color}; --hero-secondary: ${hero.secondary}" role="img" aria-label="${hero.name} ${label}">
+    <div class="sprite-stage ${variant}" data-hero-id="${hero.id}" data-hero-shape="${hero.shape}" style="--hero-color: ${hero.color}; --hero-secondary: ${hero.secondary}" role="img" aria-label="${hero.name} ${label}">
       <span class="sprite-aura"></span>
+      <span class="sprite-shadow"></span>
       <span class="sprite-base"></span>
       <img class="hero-sprite" src="${heroSpritePath(hero)}" alt="${hero.name}" draggable="false">
     </div>
