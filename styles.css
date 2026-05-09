@@ -2096,3 +2096,208 @@ body[data-screen="game"] {
     gap: 8px;
   }
 }
+
+/* Hand-painted MOBA / RTS graphics pass */
+:root {
+  --stone: #202622;
+  --stone-dark: #101411;
+  --metal: #5d6a67;
+  --ember: #e89d3c;
+  --arcane: #40d1cb;
+}
+
+body {
+  background:
+    linear-gradient(135deg, rgba(232, 157, 60, 0.11), transparent 30%),
+    linear-gradient(225deg, rgba(64, 209, 203, 0.09), transparent 34%),
+    linear-gradient(180deg, #141716, #0b0e0d 62%, #11130f);
+}
+
+.hero-card,
+.shop-card,
+.standing-row,
+.upgrade-tile,
+.ability-tile,
+.meter-pill,
+.inspector,
+.combat-log,
+.fighter-info {
+  border-color: rgba(224, 198, 132, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.055), transparent 42%),
+    linear-gradient(135deg, rgba(93,106,103,0.16), transparent 44%),
+    rgba(19, 23, 21, 0.94);
+}
+
+.hero-card,
+.shop-card,
+.standing-row,
+.upgrade-tile {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -16px 28px rgba(0,0,0,0.16);
+}
+
+.hero-card:hover,
+.hero-card.selected {
+  border-color: color-mix(in srgb, var(--hero-color) 72%, var(--ember));
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.34),
+    0 0 0 1px color-mix(in srgb, var(--hero-color) 26%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.hero-art {
+  border-color: rgba(224, 198, 132, 0.16);
+  background:
+    radial-gradient(circle at 50% 34%, color-mix(in srgb, var(--hero-color) 28%, transparent), transparent 44%),
+    linear-gradient(180deg, rgba(255,255,255,0.05), transparent 42%),
+    linear-gradient(145deg, #19201d, #0b0d0c 74%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.035),
+    inset 0 -28px 38px rgba(0,0,0,0.24);
+}
+
+.arena-board {
+  border-color: rgba(224, 198, 132, 0.2);
+  background:
+    linear-gradient(90deg, rgba(232, 108, 57, 0.14), transparent 32%, transparent 68%, rgba(64, 209, 203, 0.13)),
+    linear-gradient(180deg, rgba(0,0,0,0.06), rgba(0,0,0,0.18)),
+    url("assets/arena/moba-arena.png") center / cover no-repeat,
+    #0d1110;
+  box-shadow:
+    0 22px 50px rgba(0,0,0,0.28),
+    inset 0 0 0 1px rgba(255,255,255,0.07),
+    inset 0 -60px 92px rgba(0,0,0,0.38);
+}
+
+.arena-board::before {
+  inset: 0;
+  height: auto;
+  border: 0;
+  border-radius: 8px;
+  clip-path: none;
+  transform: none;
+  background:
+    radial-gradient(ellipse at 33% 66%, rgba(232, 157, 60, 0.16), transparent 25%),
+    radial-gradient(ellipse at 70% 42%, rgba(64, 209, 203, 0.15), transparent 28%),
+    linear-gradient(180deg, rgba(0,0,0,0.08), transparent 38%, rgba(0,0,0,0.34));
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.42);
+  z-index: 1;
+}
+
+.arena-board::after {
+  background:
+    linear-gradient(90deg, rgba(228,88,69,0.1), transparent 29%, transparent 71%, rgba(82,183,177,0.11)),
+    radial-gradient(ellipse at 50% 50%, transparent 43%, rgba(0,0,0,0.28) 100%);
+}
+
+.arena-board .fighter-left {
+  left: 4%;
+  bottom: 18px;
+}
+
+.arena-board .fighter-right {
+  right: 5%;
+  bottom: 92px;
+}
+
+.arena-board .fighter-portrait {
+  width: min(320px, 100%);
+}
+
+.fighter-info {
+  border-color: rgba(224, 198, 132, 0.22);
+  background:
+    linear-gradient(180deg, rgba(31, 36, 33, 0.9), rgba(7, 9, 8, 0.86)),
+    rgba(10, 12, 11, 0.88);
+}
+
+.fighter-portrait .hero-sprite {
+  width: 152%;
+  filter:
+    drop-shadow(0 28px 16px rgba(0,0,0,0.68))
+    drop-shadow(0 0 14px color-mix(in srgb, var(--hero-color) 34%, transparent))
+    saturate(1.12)
+    contrast(1.04);
+}
+
+.fighter-right .fighter-portrait .hero-sprite {
+  transform: translateY(7%) scaleX(-1);
+}
+
+.sprite-aura {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--hero-color) 22%, transparent), transparent 64%);
+}
+
+.sprite-base {
+  border-color: color-mix(in srgb, var(--hero-secondary) 54%, rgba(224, 198, 132, 0.32));
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.15), rgba(0,0,0,0.36)),
+    color-mix(in srgb, var(--stone) 76%, var(--hero-color));
+}
+
+.primary-button,
+.secondary-button,
+.icon-button {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    0 10px 20px rgba(0,0,0,0.22);
+}
+
+.primary-button {
+  background: linear-gradient(180deg, #ffd46d, var(--gold) 48%, #b87924);
+}
+
+.secondary-button {
+  background: linear-gradient(180deg, #68e4db, var(--teal) 52%, #2d817c);
+}
+
+.cost,
+.category-chip,
+.shield-badge,
+.standing-rank {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 5px 10px rgba(0,0,0,0.24);
+}
+
+.fx-burst {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--fx-secondary) 58%, transparent), color-mix(in srgb, var(--fx-color) 36%, transparent) 38%, transparent 69%);
+}
+
+@media (max-width: 760px) {
+  .arena-board {
+    background-position: center;
+  }
+
+  .arena-board::before {
+    inset: 0;
+    height: auto;
+    transform: none;
+  }
+
+  .arena-board .fighter-left {
+    left: -2%;
+    bottom: 34px;
+  }
+
+  .arena-board .fighter-right {
+    right: 1%;
+    bottom: 150px;
+  }
+
+  .fighter-portrait .hero-sprite {
+    width: 142%;
+  }
+}
+
+@media (max-width: 430px) {
+  .arena-board .fighter-left {
+    left: -5%;
+  }
+
+  .arena-board .fighter-right {
+    right: -3%;
+  }
+}
