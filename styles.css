@@ -2301,3 +2301,139 @@ body {
     right: -3%;
   }
 }
+
+/* 3D chibi hero pass */
+.hero-art {
+  background:
+    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--hero-color) 24%, transparent), transparent 44%),
+    radial-gradient(ellipse at 50% 82%, rgba(0,0,0,0.38), transparent 58%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), transparent 42%),
+    linear-gradient(145deg, #1a211d, #0b0d0c 74%);
+}
+
+.hero-sprite {
+  filter:
+    drop-shadow(0 16px 10px rgba(0,0,0,0.48))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--hero-color) 32%, transparent))
+    saturate(1.08)
+    contrast(1.03);
+}
+
+.hero-art .hero-sprite {
+  max-width: 96%;
+  max-height: 104%;
+}
+
+.inspector-art .hero-sprite {
+  max-width: 78%;
+  max-height: 98%;
+}
+
+.sprite-aura {
+  inset: 10% 13% 12%;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--hero-color) 20%, transparent), transparent 62%);
+}
+
+.sprite-shadow {
+  bottom: 6%;
+  width: 62%;
+  height: 15%;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.5), transparent 70%);
+}
+
+.sprite-base {
+  bottom: 7%;
+  width: 48%;
+  aspect-ratio: 2.05;
+  border-radius: 999px;
+  transform: translateX(-50%) rotateX(62deg);
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.14), transparent 52%),
+    linear-gradient(135deg, rgba(255,255,255,0.12), rgba(0,0,0,0.34)),
+    color-mix(in srgb, var(--stone) 78%, var(--hero-color));
+}
+
+.mini-portrait .hero-sprite,
+.hero-mini-sprite .hero-sprite {
+  width: 138%;
+  transform: translateY(13%);
+}
+
+.standing-avatar .hero-sprite {
+  width: 146%;
+  transform: translateY(13%);
+}
+
+.arena-board .fighter-portrait {
+  width: min(292px, 100%);
+}
+
+.fighter-portrait .hero-sprite {
+  width: 132%;
+  transform: translateY(5%);
+  filter:
+    drop-shadow(0 27px 14px rgba(0,0,0,0.66))
+    drop-shadow(0 0 12px color-mix(in srgb, var(--hero-color) 30%, transparent))
+    saturate(1.1)
+    contrast(1.04);
+}
+
+.fighter-right .fighter-portrait .hero-sprite {
+  transform: translateY(5%) scaleX(-1);
+}
+
+.fighter-portrait .sprite-base {
+  bottom: 3%;
+  width: 52%;
+}
+
+.fighter-portrait .sprite-aura {
+  inset: 4% 4% 7%;
+}
+
+.arena-board .fighter-left {
+  left: 4%;
+  bottom: 26px;
+}
+
+.arena-board .fighter-right {
+  right: 5%;
+  bottom: 100px;
+}
+
+@media (max-width: 760px) {
+  .arena-board .fighter {
+    width: 50%;
+    max-width: 208px;
+  }
+
+  .arena-board .fighter-left {
+    left: 1%;
+    bottom: 42px;
+  }
+
+  .arena-board .fighter-right {
+    right: 3%;
+    bottom: 152px;
+    transform: scale(0.9);
+  }
+
+  .arena-board .fighter-portrait {
+    width: min(210px, 100%);
+  }
+
+  .fighter-portrait .hero-sprite {
+    width: 125%;
+  }
+}
+
+@media (max-width: 430px) {
+  .arena-board .fighter-left {
+    left: -2%;
+  }
+
+  .arena-board .fighter-right {
+    right: -1%;
+  }
+}
