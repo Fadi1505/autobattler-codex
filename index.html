@@ -110,18 +110,7 @@
             </div>
           </div>
 
-          <div class="ability-strip">
-            <div class="ability-tile">
-              <span>Interval</span>
-              <strong id="passiveName">Passive</strong>
-              <div class="cooldown"><span id="passiveCooldown"></span></div>
-            </div>
-            <div class="ability-tile">
-              <span>Ultimate</span>
-              <strong id="ultimateName">Ultimate</strong>
-              <div class="cooldown"><span id="ultimateCharge"></span></div>
-            </div>
-          </div>
+          <div id="combatAbilityGrid" class="ability-strip"></div>
 
           <div id="combatLog" class="combat-log" aria-live="polite"></div>
         </section>
@@ -137,6 +126,13 @@
         </aside>
 
         <aside class="stats-section">
+          <div class="section-title compact">
+            <h2>Hero Kit</h2>
+            <span id="heroRole">Role</span>
+          </div>
+          <div id="heroStatsGrid" class="hero-stats-grid"></div>
+          <div id="heroAbilityList" class="hero-ability-list"></div>
+
           <div class="section-title compact">
             <h2>Upgrades</h2>
             <span id="powerValue">0 power</span>

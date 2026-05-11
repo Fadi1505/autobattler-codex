@@ -55,14 +55,24 @@ const heroes = [
     tags: ["Attack", "Critical"],
     prefers: ["attack", "critical", "mana"],
     base: { hp: 165, attack: 25, interval: 1350, defense: 2, evasion: 0.04, crit: 0.12, shield: 0 },
-    passive: {
-      name: "Cinder Sweep",
-      text: "Every 5 seconds, scorches the enemy."
-    },
-    ultimate: {
-      name: "Meteor Chain",
-      text: "At 100 mana, crashes a heavy fire strike."
-    }
+    abilities: [
+      {
+        id: "kindled-blade",
+        type: "passive",
+        trigger: "On attack",
+        name: "Kindled Blade",
+        text: "Basic attacks can ignite the enemy for bonus fire damage.",
+        tooltip: "35% chance on basic attack to deal bonus fire damage. Scales with Attack upgrades and grants a little mana."
+      },
+      {
+        id: "meteor-chain",
+        type: "ultimate",
+        trigger: "100 mana",
+        name: "Meteor Chain",
+        text: "Crashes a defense-piercing fire strike, then burns again.",
+        tooltip: "At 100 mana, deals heavy damage that ignores defense, then deals a smaller ignite hit if the enemy survives."
+      }
+    ]
   },
   {
     id: "tide-warden",
@@ -74,14 +84,24 @@ const heroes = [
     tags: ["Shield", "Defense"],
     prefers: ["shield", "defense", "mana"],
     base: { hp: 190, attack: 19, interval: 1550, defense: 5, evasion: 0.02, crit: 0.06, shield: 24 },
-    passive: {
+    abilities: [
+    {
+      id: "foam-guard",
+      type: "active",
+      trigger: "Auto: 5s",
       name: "Foam Guard",
-      text: "Every 5 seconds, gains a shield."
+      text: "Auto-casts a shield and gains a small burst of mana.",
+      tooltip: "Auto-casts about every 5 seconds. Gives Tide Warden a shield and bonus mana. Mana upgrades reduce this cooldown."
     },
-    ultimate: {
+    {
+      id: "tidal-bastion",
+      type: "ultimate",
+      trigger: "100 mana",
       name: "Tidal Bastion",
-      text: "At 100 mana, shields, heals, and sends a wave."
+      text: "Shields, heals, and sends a wave into the enemy.",
+      tooltip: "At 100 mana, gains a large shield, heals, and damages the enemy. Scales best with Shield and Defense upgrades."
     }
+    ]
   },
   {
     id: "night-veil",
@@ -93,14 +113,24 @@ const heroes = [
     tags: ["Evasion", "Critical"],
     prefers: ["evasion", "critical", "attack"],
     base: { hp: 150, attack: 23, interval: 1120, defense: 1, evasion: 0.13, crit: 0.16, shield: 0 },
-    passive: {
+    abilities: [
+    {
+      id: "ghost-step",
+      type: "passive",
+      trigger: "On dodge",
       name: "Ghost Step",
-      text: "Every 5 seconds, primes a lethal strike and slips attacks."
+      text: "Dodging primes a lethal counter and grants mana.",
+      tooltip: "When Night Veil dodges, the next attack has bonus critical chance and Night Veil gains mana. Evasion upgrades make this trigger more often."
     },
-    ultimate: {
+    {
+      id: "shadow-bloom",
+      type: "ultimate",
+      trigger: "100 mana",
       name: "Shadow Bloom",
-      text: "At 100 mana, lands a defense-piercing ambush."
+      text: "Lands a defense-piercing ambush and becomes harder to hit.",
+      tooltip: "At 100 mana, deals defense-piercing damage and gains a large temporary evasion boost."
     }
+    ]
   },
   {
     id: "iron-saint",
@@ -112,14 +142,24 @@ const heroes = [
     tags: ["Defense", "Shield"],
     prefers: ["defense", "shield", "attack"],
     base: { hp: 205, attack: 18, interval: 1650, defense: 7, evasion: 0.01, crit: 0.04, shield: 18 },
-    passive: {
+    abilities: [
+    {
+      id: "tempered-vow",
+      type: "active",
+      trigger: "Auto: 5s",
       name: "Tempered Vow",
-      text: "Every 5 seconds, heals and hardens armor."
+      text: "Auto-casts a heal and temporary armor vow.",
+      tooltip: "Auto-casts about every 5 seconds. Heals Iron Saint and gives temporary defense. Mana upgrades reduce this cooldown."
     },
-    ultimate: {
+    {
+      id: "judgment-bell",
+      type: "ultimate",
+      trigger: "100 mana",
       name: "Judgment Bell",
-      text: "At 100 mana, strikes hard and restores health."
+      text: "Strikes hard and restores health.",
+      tooltip: "At 100 mana, damages the enemy and heals Iron Saint. Scales strongly with Defense upgrades."
     }
+    ]
   },
   {
     id: "storm-oracle",
@@ -131,14 +171,24 @@ const heroes = [
     tags: ["Mana", "Attack"],
     prefers: ["mana", "attack", "critical"],
     base: { hp: 158, attack: 20, interval: 1400, defense: 2, evasion: 0.05, crit: 0.08, shield: 0 },
-    passive: {
+    abilities: [
+    {
+      id: "static-read",
+      type: "passive",
+      trigger: "On attack",
       name: "Static Read",
-      text: "Every 5 seconds, gains mana and shocks the enemy."
+      text: "Attacks can shock the enemy and accelerate mana.",
+      tooltip: "40% chance on basic attack to gain extra mana and deal a small lightning hit. Mana upgrades improve both tempo and shock damage."
     },
-    ultimate: {
+    {
+      id: "storm-verdict",
+      type: "ultimate",
+      trigger: "100 mana",
       name: "Storm Verdict",
-      text: "At 100 mana, fires a chain of lightning hits."
+      text: "Fires a chain of lightning hits.",
+      tooltip: "At 100 mana, strikes the enemy four times with lightning. Scales with Mana upgrades."
     }
+    ]
   },
   {
     id: "thorn-beast",
@@ -150,14 +200,24 @@ const heroes = [
     tags: ["Defense", "Attack"],
     prefers: ["defense", "attack", "shield"],
     base: { hp: 198, attack: 22, interval: 1500, defense: 4, evasion: 0.03, crit: 0.07, shield: 10 },
-    passive: {
-      name: "Bramble Surge",
-      text: "Every 5 seconds, lashes out and grows a shield."
+    abilities: [
+    {
+      id: "wild-momentum",
+      type: "passive",
+      trigger: "On attack",
+      name: "Wild Momentum",
+      text: "Attacks can briefly increase attack speed.",
+      tooltip: "28% chance on basic attack to gain Haste, reducing attack interval for a short time. Attack upgrades improve how often this matters."
     },
-    ultimate: {
-      name: "Wild Maul",
-      text: "At 100 mana, mauls and heals from the hit."
+    {
+      id: "granite-bash",
+      type: "passive",
+      trigger: "On attack",
+      name: "Granite Bash",
+      text: "Attacks can bash the enemy, delaying their next swing.",
+      tooltip: "20% chance on basic attack to deal bonus damage and delay the enemy attack timer. Thorn Beast has no ultimate: its power is all passive uptime."
     }
+    ]
   },
   {
     id: "prism-archer",
@@ -169,14 +229,24 @@ const heroes = [
     tags: ["Critical", "Attack"],
     prefers: ["critical", "attack", "evasion"],
     base: { hp: 155, attack: 24, interval: 1200, defense: 1, evasion: 0.06, crit: 0.19, shield: 0 },
-    passive: {
+    abilities: [
+    {
+      id: "splinter-shot",
+      type: "passive",
+      trigger: "On crit",
       name: "Splinter Shot",
-      text: "Every 5 seconds, fires a shot that can crit."
+      text: "Critical hits can splinter for a second piercing hit.",
+      tooltip: "When Prism Archer crits, there is a 45% chance to fire a bonus splinter hit. Scales with Critical upgrades."
     },
-    ultimate: {
+    {
+      id: "solar-volley",
+      type: "ultimate",
+      trigger: "100 mana",
       name: "Solar Volley",
-      text: "At 100 mana, releases five critical arrows."
+      text: "Releases five arrows that can critically strike.",
+      tooltip: "At 100 mana, fires five quick arrows. Each arrow can crit, making Critical upgrades extremely valuable."
     }
+    ]
   },
   {
     id: "void-alchemist",
@@ -188,14 +258,24 @@ const heroes = [
     tags: ["Mana", "Evasion"],
     prefers: ["mana", "evasion", "shield"],
     base: { hp: 170, attack: 19, interval: 1450, defense: 3, evasion: 0.07, crit: 0.08, shield: 8 },
-    passive: {
+    abilities: [
+    {
+      id: "null-siphon",
+      type: "passive",
+      trigger: "On attack",
       name: "Null Siphon",
-      text: "Every 5 seconds, steals mana and turns it into damage."
+      text: "Attacks can steal mana and convert it into damage.",
+      tooltip: "35% chance on basic attack to drain enemy mana, gain mana, and deal bonus void damage based on the drained amount."
     },
-    ultimate: {
+    {
+      id: "collapse-flask",
+      type: "ultimate",
+      trigger: "100 mana",
       name: "Collapse Flask",
-      text: "At 100 mana, burns enemy mana and detonates it."
+      text: "Burns enemy mana and detonates it.",
+      tooltip: "At 100 mana, burns enemy mana, gains a shield, and deals defense-piercing damage based on mana burned."
     }
+    ]
   }
 ];
 
@@ -250,7 +330,7 @@ function bindElements() {
     "newGameBtn", "matchTitle", "fightBtn", "nextRoundBtn", "leftPortrait",
     "leftName", "leftShield", "leftHpBar", "leftManaBar", "rightPortrait",
     "rightName", "rightShield", "rightHpBar", "rightManaBar", "roundResult", "fxLayer",
-    "passiveName", "passiveCooldown", "ultimateName", "ultimateCharge",
+    "combatAbilityGrid", "heroRole", "heroStatsGrid", "heroAbilityList",
     "combatLog", "rerollBtn", "shopGrid", "upgradeGrid", "powerValue",
     "standingsList", "aliveValue"
   ].forEach((id) => {
@@ -299,22 +379,13 @@ function renderDraftSlots() {
 
 function renderHeroInspector(hero) {
   el.heroInspector.style.setProperty("--hero-color", hero.color);
+  const stats = calculateStats(hero, zeroUpgrades());
   el.heroInspector.innerHTML = `
     <div class="hero-art inspector-art">${heroSvg(hero)}</div>
     <h2>${hero.name}</h2>
     <p>${hero.role}</p>
-    <div class="ability-list">
-      <div class="ability-row">
-        <span>Interval</span>
-        <strong>${hero.passive.name}</strong>
-        <p>${hero.passive.text}</p>
-      </div>
-      <div class="ability-row">
-        <span>Ultimate</span>
-        <strong>${hero.ultimate.name}</strong>
-        <p>${hero.ultimate.text}</p>
-      </div>
-    </div>
+    ${heroStatsMarkup(stats)}
+    ${heroAbilitiesMarkup(hero)}
     <button id="startGameBtn" class="primary-button">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z"/></svg>
       Draft
@@ -382,10 +453,9 @@ function renderGame() {
   el.healthValue.textContent = Math.max(0, player.health);
   el.aliveValue.textContent = `${state.players.filter((item) => item.alive).length} alive`;
   el.powerValue.textContent = `${Math.round(powerScore(player))} power`;
-  el.passiveName.textContent = hero.passive.name;
-  el.ultimateName.textContent = hero.ultimate.name;
   el.matchTitle.textContent = opponent ? `You vs ${opponent.name}` : "Final";
 
+  renderHeroDetails(player);
   renderShop();
   renderUpgrades();
   renderStandings();
@@ -431,8 +501,7 @@ function renderIdleFighters() {
   }
 
   el.roundResult.textContent = state.lastResult || "VS";
-  setBar(el.passiveCooldown, 0);
-  setBar(el.ultimateCharge, 0);
+  renderCombatAbilities(getHero(player.heroId), null);
   if (!state.combat) {
     el.combatLog.innerHTML = `<p><strong>Round ${state.round}</strong> prep phase.</p>`;
   }
@@ -502,6 +571,91 @@ function renderStandings() {
   }).join("");
 }
 
+function renderHeroDetails(player) {
+  const hero = getHero(player.heroId);
+  const stats = getStats(player);
+  el.heroRole.textContent = hero.role;
+  el.heroStatsGrid.innerHTML = heroStatItems(stats).map((item) => `
+    <div class="hero-stat tooltip-target" tabindex="0" data-tooltip="${escapeAttr(item.tooltip)}">
+      <span>${item.label}</span>
+      <strong>${item.value}</strong>
+    </div>
+  `).join("");
+  el.heroAbilityList.innerHTML = hero.abilities.map((ability) => abilityCardMarkup(ability, "compact")).join("");
+}
+
+function renderCombatAbilities(hero, unit) {
+  if (!el.combatAbilityGrid) return;
+  el.combatAbilityGrid.innerHTML = hero.abilities.map((ability) => {
+    const progress = abilityProgress(ability, unit);
+    return `
+      <div class="ability-tile ${ability.type} tooltip-target" tabindex="0" data-tooltip="${escapeAttr(ability.tooltip || ability.text)}">
+        <span>${abilityTypeLabel(ability)}</span>
+        <strong>${ability.name}</strong>
+        <p>${ability.text}</p>
+        <div class="cooldown ${progress.mode}"><span style="width: ${progress.value}%"></span></div>
+      </div>
+    `;
+  }).join("");
+}
+
+function heroStatsMarkup(stats) {
+  return `<div class="hero-stats-grid inspector-stats">${heroStatItems(stats).map((item) => `
+    <div class="hero-stat tooltip-target" tabindex="0" data-tooltip="${escapeAttr(item.tooltip)}">
+      <span>${item.label}</span>
+      <strong>${item.value}</strong>
+    </div>
+  `).join("")}</div>`;
+}
+
+function heroAbilitiesMarkup(hero) {
+  return `<div class="ability-list">${hero.abilities.map((ability) => abilityCardMarkup(ability)).join("")}</div>`;
+}
+
+function abilityCardMarkup(ability, variant = "") {
+  return `
+    <div class="ability-row ${ability.type} ${variant} tooltip-target" tabindex="0" data-tooltip="${escapeAttr(ability.tooltip || ability.text)}">
+      <span>${abilityTypeLabel(ability)}</span>
+      <strong>${ability.name}</strong>
+      <p>${ability.text}</p>
+    </div>
+  `;
+}
+
+function heroStatItems(stats) {
+  return [
+    { label: "HP", value: stats.maxHp, tooltip: "Maximum health at the start of each duel." },
+    { label: "Attack", value: stats.attack, tooltip: "Base damage dealt by each basic attack before defense." },
+    { label: "Speed", value: `${(1000 / stats.interval).toFixed(2)}/s`, tooltip: "Approximate attacks per second. Lower interval means faster attacks." },
+    { label: "Armor", value: stats.defense, tooltip: "Flat damage reduction against most hits." },
+    { label: "Dodge", value: `${Math.round(stats.evasion * 100)}%`, tooltip: "Chance to avoid basic attacks and dodgeable effects." },
+    { label: "Crit", value: `${Math.round(stats.crit * 100)}%`, tooltip: "Chance for basic attacks and some skills to critically strike." },
+    { label: "Mana", value: `+${stats.manaGain}`, tooltip: "Mana gained when attacking. Ultimates cast at 100 mana." },
+    { label: "Shield", value: stats.startShield, tooltip: "Starting shield at the beginning of combat." }
+  ];
+}
+
+function abilityProgress(ability, unit) {
+  if (!unit) return { value: ability.type === "passive" ? 100 : 0, mode: ability.type };
+  if (ability.type === "active") {
+    return {
+      value: 100 - (unit.activeTimer / unit.stats.activeCooldown) * 100,
+      mode: "active"
+    };
+  }
+  if (ability.type === "ultimate") return { value: unit.mana, mode: "ultimate" };
+  return { value: 100, mode: "passive" };
+}
+
+function abilityTypeLabel(ability) {
+  const labels = {
+    passive: "Passive",
+    active: "Active",
+    ultimate: "Ultimate"
+  };
+  return `${labels[ability.type] || ability.type} - ${ability.trigger}`;
+}
+
 function buyCard(index) {
   if (state.combat || state.gameOver) return;
   const card = state.shop[index];
@@ -563,11 +717,13 @@ function createUnit(player, side) {
     shield: stats.startShield,
     mana: 0,
     attackTimer: 650,
-    passiveTimer: stats.passiveCooldown,
+    activeTimer: hasActiveAbility(hero) ? stats.activeCooldown : 0,
     pose: "idle",
     poseUntil: 0,
     buffs: {
       focus: false,
+      haste: false,
+      hasteTimer: 0,
       evasion: 0,
       evasionTimer: 0,
       defense: 0,
@@ -599,6 +755,10 @@ function tickCombat() {
 }
 
 function tickBuffs(unit) {
+  if (unit.buffs.hasteTimer > 0) {
+    unit.buffs.hasteTimer -= TICK_MS;
+    if (unit.buffs.hasteTimer <= 0) unit.buffs.haste = false;
+  }
   if (unit.buffs.evasionTimer > 0) {
     unit.buffs.evasionTimer -= TICK_MS;
     if (unit.buffs.evasionTimer <= 0) unit.buffs.evasion = 0;
@@ -610,104 +770,148 @@ function tickBuffs(unit) {
 }
 
 function tickUnit(unit, enemy) {
-  unit.passiveTimer -= TICK_MS;
+  if (hasActiveAbility(unit.hero)) unit.activeTimer -= TICK_MS;
   unit.attackTimer -= TICK_MS;
 
-  if (unit.passiveTimer <= 0) {
-    unit.passiveTimer += unit.stats.passiveCooldown;
-    castPassive(unit, enemy);
+  if (hasActiveAbility(unit.hero) && unit.activeTimer <= 0) {
+    unit.activeTimer += unit.stats.activeCooldown;
+    castActive(unit, enemy);
     if (!isAlive(enemy)) return;
   }
 
-  if (unit.mana >= MAX_MANA) {
+  if (hasUltimateAbility(unit.hero) && unit.mana >= MAX_MANA) {
     unit.mana -= MAX_MANA;
     castUltimate(unit, enemy);
     if (!isAlive(enemy)) return;
   }
 
   if (unit.attackTimer <= 0) {
-    unit.attackTimer += unit.stats.interval;
+    unit.attackTimer += attackInterval(unit);
     basicAttack(unit, enemy);
   }
+}
+
+function attackInterval(unit) {
+  return Math.round(unit.stats.interval * (unit.buffs.haste ? 0.64 : 1));
 }
 
 function basicAttack(unit, enemy) {
   setUnitPose(unit, "attacking", 430);
   flash(unit.side, "attacking");
   playStrikeEffect(unit, enemy);
-  dealDamage(unit, enemy, unit.stats.attack, {
+  const result = dealDamage(unit, enemy, unit.stats.attack, {
     label: "attacks",
     canCrit: true,
     canDodge: true,
     mana: unit.stats.manaGain
   });
+  applyAttackPassives(unit, enemy, result);
 }
-function castPassive(unit, enemy) {
+
+function applyAttackPassives(unit, enemy, damage) {
+  if (!isAlive(unit) || !isAlive(enemy) || damage <= 0) return;
   const upgrades = unit.player.upgrades;
-  setUnitPose(unit, "casting", 680);
-  flash(unit.side, "casting");
-  playCastName(unit, unit.hero.passive.name, false);
-  playHeroEffect("passive", unit, enemy);
 
   switch (unit.hero.id) {
     case "ember-ronin":
-      addLog(`${unitLabel(unit)} casts <strong>${unit.hero.passive.name}</strong>.`);
-      dealDamage(unit, enemy, 18 + upgrades.attack * 2, { label: "burns", mana: 10 });
+      if (Math.random() < 0.35) {
+        addLog(`${unitLabel(unit)} triggers <strong>Kindled Blade</strong>.`);
+        playProjectileEffect(unit, enemy, "fx-fire", unit.hero.color, unit.hero.secondary, 0, 480);
+        dealDamage(unit, enemy, 10 + upgrades.attack * 2, { label: "ignites", mana: 4 });
+      }
       break;
+    case "storm-oracle":
+      if (Math.random() < 0.4) {
+        addLog(`${unitLabel(unit)} triggers <strong>Static Read</strong>.`);
+        gainMana(unit, 10 + upgrades.mana);
+        playBeamEffect(unit, enemy, unit.hero.color, unit.hero.secondary, 0);
+        dealDamage(unit, enemy, 8 + upgrades.mana * 2, { label: "shocks", mana: 0 });
+      }
+      break;
+    case "thorn-beast":
+      if (Math.random() < 0.28) {
+        addLog(`${unitLabel(unit)} triggers <strong>Wild Momentum</strong>.`);
+        unit.buffs.haste = true;
+        unit.buffs.hasteTimer = 2600 + upgrades.attack * 70;
+        unit.attackTimer = Math.min(unit.attackTimer, Math.round(attackInterval(unit) * 0.45));
+        setUnitPose(unit, "guarding", 520);
+        playFloatText(unit.side, "HASTE", unit.hero.color, unit.hero.secondary);
+      }
+      if (isAlive(enemy) && Math.random() < 0.2) {
+        addLog(`${unitLabel(unit)} triggers <strong>Granite Bash</strong>.`);
+        enemy.attackTimer += 520 + upgrades.defense * 20;
+        setUnitPose(enemy, "hit", 420);
+        playImpactEffect(enemy, "critical", unit.hero.color, unit.hero.secondary);
+        dealDamage(unit, enemy, 12 + upgrades.attack * 2 + upgrades.defense, { label: "bashes", mana: 6 });
+        playFloatText(enemy.side, "BASH", unit.hero.color, unit.hero.secondary);
+      }
+      break;
+    case "prism-archer":
+      if (unit.lastHitCrit && Math.random() < 0.45) {
+        addLog(`${unitLabel(unit)} triggers <strong>Splinter Shot</strong>.`);
+        playProjectileEffect(unit, enemy, "fx-arrow", unit.hero.color, unit.hero.secondary, 0, 420);
+        dealDamage(unit, enemy, 12 + upgrades.critical * 3, {
+          label: "splinters",
+          ignoreDefense: true,
+          mana: 6
+        });
+      }
+      break;
+    case "void-alchemist":
+      if (Math.random() < 0.35) {
+        const drained = Math.min(enemy.mana, 12 + upgrades.mana);
+        enemy.mana -= drained;
+        gainMana(unit, 8 + drained);
+        addLog(`${unitLabel(unit)} triggers <strong>Null Siphon</strong> and drains ${Math.round(drained)} mana.`);
+        playPlacedEffect("fx-vortex", enemy.side, unit.hero.color, unit.hero.secondary, 560, 0);
+        dealDamage(unit, enemy, 9 + drained * 0.45 + upgrades.mana, { label: "siphons", mana: 0 });
+      }
+      break;
+  }
+}
+
+function applyDodgePassives(unit, enemy) {
+  if (unit.hero.id !== "night-veil") return;
+  addLog(`${unitLabel(unit)} triggers <strong>Ghost Step</strong>.`);
+  unit.buffs.focus = true;
+  gainMana(unit, 12 + unit.player.upgrades.mana);
+  playFloatText(unit.side, "GHOST STEP", unit.hero.color, unit.hero.secondary);
+  if (enemy) enemy.attackTimer += 140;
+}
+
+function castActive(unit, enemy) {
+  const upgrades = unit.player.upgrades;
+  const ability = getActiveAbility(unit.hero);
+  if (!ability) return;
+  setUnitPose(unit, "casting", 680);
+  flash(unit.side, "casting");
+  playCastName(unit, ability.name, false);
+  playHeroEffect("active", unit, enemy);
+
+  switch (unit.hero.id) {
     case "tide-warden":
-      addLog(`${unitLabel(unit)} casts <strong>${unit.hero.passive.name}</strong>.`);
+      addLog(`${unitLabel(unit)} auto-casts <strong>${ability.name}</strong>.`);
       gainShield(unit, 26 + upgrades.shield * 5);
       gainMana(unit, 8);
       break;
-    case "night-veil":
-      addLog(`${unitLabel(unit)} casts <strong>${unit.hero.passive.name}</strong>.`);
-      unit.buffs.focus = true;
-      unit.buffs.evasion = 0.18;
-      unit.buffs.evasionTimer = 2300;
-      gainMana(unit, 8);
-      break;
     case "iron-saint":
-      addLog(`${unitLabel(unit)} casts <strong>${unit.hero.passive.name}</strong>.`);
+      addLog(`${unitLabel(unit)} auto-casts <strong>${ability.name}</strong>.`);
       heal(unit, 14 + upgrades.defense * 3);
       unit.buffs.defense = 4 + upgrades.defense;
       unit.buffs.defenseTimer = 2800;
       gainMana(unit, 7);
       break;
-    case "storm-oracle":
-      addLog(`${unitLabel(unit)} casts <strong>${unit.hero.passive.name}</strong>.`);
-      gainMana(unit, 20 + upgrades.mana * 2);
-      dealDamage(unit, enemy, 12 + upgrades.mana * 2, { label: "shocks", mana: 0 });
-      break;
-    case "thorn-beast":
-      addLog(`${unitLabel(unit)} casts <strong>${unit.hero.passive.name}</strong>.`);
-      gainShield(unit, 10 + upgrades.shield * 3);
-      dealDamage(unit, enemy, 14 + (upgrades.defense + upgrades.shield) * 2, { label: "lashes", mana: 9 });
-      break;
-    case "prism-archer":
-      addLog(`${unitLabel(unit)} casts <strong>${unit.hero.passive.name}</strong>.`);
-      dealDamage(unit, enemy, unit.stats.attack * 0.75 + upgrades.critical * 2, {
-        label: "snipes",
-        canCrit: true,
-        mana: 10
-      });
-      break;
-    case "void-alchemist": {
-      addLog(`${unitLabel(unit)} casts <strong>${unit.hero.passive.name}</strong>.`);
-      const drained = Math.min(enemy.mana, 14 + upgrades.mana);
-      enemy.mana -= drained;
-      gainMana(unit, drained + 8);
-      dealDamage(unit, enemy, 12 + drained * 0.5, { label: "siphons", mana: 0 });
-      break;
-    }
   }
 }
 
 function castUltimate(unit, enemy) {
   const upgrades = unit.player.upgrades;
+  const ability = getUltimateAbility(unit.hero);
+  if (!ability) return;
   setUnitPose(unit, "casting", 920);
   flash(unit.side, "casting");
-  addLog(`${unitLabel(unit)} unleashes <strong>${unit.hero.ultimate.name}</strong>.`);
-  playCastName(unit, unit.hero.ultimate.name, true);
+  addLog(`${unitLabel(unit)} unleashes <strong>${ability.name}</strong>.`);
+  playCastName(unit, ability.name, true);
   playHeroEffect("ultimate", unit, enemy);
 
   switch (unit.hero.id) {
@@ -779,8 +983,11 @@ function dealDamage(unit, enemy, rawAmount, options = {}) {
   const dodgeChance = clamp(enemy.stats.evasion + enemy.buffs.evasion, 0, 0.62);
 
   if (options.canDodge && Math.random() < dodgeChance) {
+    unit.lastHitCrit = false;
+    unit.lastDamage = 0;
     gainMana(enemy, 6 + enemy.player.upgrades.mana);
     addLog(`${unitLabel(enemy)} evades ${unitLabel(unit)}.`);
+    applyDodgePassives(enemy, unit);
     setUnitPose(enemy, "dodging", 540);
     flash(enemy.side, "casting");
     playDodgeEffect(enemy);
@@ -813,6 +1020,8 @@ function dealDamage(unit, enemy, rawAmount, options = {}) {
   parts.push(`${amount} damage`);
   if (shieldDamage > 0) parts.push(`${shieldDamage} blocked`);
   addLog(`${unitLabel(unit)} ${label} ${unitLabel(enemy)} for <strong>${parts.join(", ")}</strong>.`);
+  unit.lastHitCrit = crit;
+  unit.lastDamage = amount;
   playImpactEffect(enemy, crit ? "critical" : "hit", unit.hero.color, unit.hero.secondary);
   playFloatText(enemy.side, `${crit ? "CRIT " : ""}${amount}`, crit ? categories.critical.color : unit.hero.color, unit.hero.secondary);
   setUnitPose(enemy, "hit", 380);
@@ -821,6 +1030,7 @@ function dealDamage(unit, enemy, rawAmount, options = {}) {
 }
 
 function gainMana(unit, amount) {
+  if (!hasUltimateAbility(unit.hero)) return;
   unit.mana = clamp(unit.mana + amount, 0, MAX_MANA);
 }
 
@@ -920,8 +1130,7 @@ function renderCombat() {
   setBar(el.rightHpBar, (right.hp / right.stats.maxHp) * 100);
   setBar(el.leftManaBar, left.mana);
   setBar(el.rightManaBar, right.mana);
-  setBar(el.passiveCooldown, 100 - (left.passiveTimer / left.stats.passiveCooldown) * 100);
-  setBar(el.ultimateCharge, left.mana);
+  renderCombatAbilities(left.hero, left);
   el.roundResult.textContent = combat.finished ? state.lastResult : "";
   el.combatLog.innerHTML = combat.logs.slice(-10).map((line) => `<p>${line}</p>`).join("");
   el.combatLog.scrollTop = el.combatLog.scrollHeight;
@@ -1212,7 +1421,10 @@ function upgradeAiPlayers() {
 
 function getStats(player) {
   const hero = getHero(player.heroId);
-  const upgrades = player.upgrades;
+  return calculateStats(hero, player.upgrades);
+}
+
+function calculateStats(hero, upgrades) {
   return {
     maxHp: hero.base.hp + upgrades.defense * 16 + upgrades.shield * 4,
     attack: hero.base.attack + upgrades.attack * 5 + Math.floor(upgrades.critical * 0.8),
@@ -1223,7 +1435,7 @@ function getStats(player) {
     critMult: 1.55 + upgrades.critical * 0.05,
     manaGain: 12 + upgrades.mana * 2,
     startShield: hero.base.shield + upgrades.shield * 17,
-    passiveCooldown: Math.max(3200, 5000 - upgrades.mana * 90)
+    activeCooldown: Math.max(3200, 5000 - upgrades.mana * 90)
   };
 }
 
@@ -1261,6 +1473,26 @@ function getOpponent() {
 
 function getHero(heroId) {
   return heroes.find((hero) => hero.id === heroId);
+}
+
+function getActiveAbility(hero) {
+  return hero.abilities.find((ability) => ability.type === "active") || null;
+}
+
+function getUltimateAbility(hero) {
+  return hero.abilities.find((ability) => ability.type === "ultimate") || null;
+}
+
+function hasActiveAbility(hero) {
+  return Boolean(getActiveAbility(hero));
+}
+
+function hasUltimateAbility(hero) {
+  return Boolean(getUltimateAbility(hero));
+}
+
+function zeroUpgrades() {
+  return Object.fromEntries(categoryOrder.map((category) => [category, 0]));
 }
 
 function generateShop() {
@@ -1320,6 +1552,14 @@ function randomBetween(min, max) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function escapeAttr(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function heroSvg(hero) {
