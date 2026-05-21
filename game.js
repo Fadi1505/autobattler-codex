@@ -44,6 +44,22 @@ const categories = {
 
 const categoryOrder = ["attack", "mana", "defense", "evasion", "critical", "shield"];
 
+const rarityInfo = {
+  common: { label: "Common", color: "#b6b1a9", weight: 56 },
+  rare: { label: "Rare", color: "#5f91d8", weight: 30 },
+  epic: { label: "Epic", color: "#c47adf", weight: 11 },
+  legendary: { label: "Legendary", color: "#f2b84b", weight: 3 }
+};
+
+const rarityOrder = ["common", "rare", "epic", "legendary"];
+
+const rarityBonuses = {
+  common: { points: 0, cost: 0 },
+  rare: { points: 1, cost: 1 },
+  epic: { points: 2, cost: 2 },
+  legendary: { points: 3, cost: 3 }
+};
+
 const heroes = [
   {
     id: "ember-ronin",
@@ -297,7 +313,13 @@ const cardPool = [
   { name: "Execution Star", category: "critical", cost: 7, points: 3, text: "Large crit scaling." },
   { name: "Aegis Core", category: "shield", cost: 3, points: 1, text: "Starts each fight shielded." },
   { name: "Violet Ward", category: "shield", cost: 5, points: 2, text: "Thicker shield buffer." },
-  { name: "Barrier Crown", category: "shield", cost: 7, points: 3, text: "Major shield growth." }
+  { name: "Barrier Crown", category: "shield", cost: 7, points: 3, text: "Major shield growth." },
+  { name: "Dragon King Relic", category: "attack", cost: 9, points: 4, rarity: "legendary", text: "A huge attack spike for closing rounds." },
+  { name: "Astral Battery", category: "mana", cost: 9, points: 4, rarity: "legendary", text: "Turns your hero into an ultimate engine." },
+  { name: "Titan Plate", category: "defense", cost: 9, points: 4, rarity: "legendary", text: "Massive late-game armor and health." },
+  { name: "Phantom Crown", category: "evasion", cost: 9, points: 4, rarity: "legendary", text: "Elite dodge scaling for slippery builds." },
+  { name: "Royal Execution Lens", category: "critical", cost: 9, points: 4, rarity: "legendary", text: "Huge crit scaling for burst builds." },
+  { name: "Worldshell Aegis", category: "shield", cost: 9, points: 4, rarity: "legendary", text: "A massive shield package for tank builds." }
 ];
 
 const aiNames = ["Mara", "Bex", "Olan", "Sera", "Kade", "Voss", "Nia"];
@@ -312,6 +334,7 @@ const state = {
   combat: null,
   timer: null,
   gameOver: false,
+  shopLocked: false,
   lastResult: ""
 };
 
@@ -331,7 +354,7 @@ function bindElements() {
     "leftName", "leftShield", "leftHpBar", "leftManaBar", "rightPortrait",
     "rightName", "rightShield", "rightHpBar", "rightManaBar", "roundResult", "fxLayer",
     "combatAbilityGrid", "heroRole", "heroStatsGrid", "heroAbilityList",
-    "combatLog", "rerollBtn", "shopGrid", "upgradeGrid", "powerValue",
+    "roundSummary", "combatLog", "rerollBtn", "shopLockBtn", "shopGrid", "upgradeGrid", "powerValue",
     "standingsList", "aliveValue"
   ].forEach((id) => {
     el[id] = document.getElementById(id);
@@ -342,7 +365,11 @@ function bindEvents() {
   el.fightBtn.addEventListener("click", startFight);
   el.nextRoundBtn.addEventListener("click", nextRound);
   el.rerollBtn.addEventListener("click", rerollShop);
+  el.shopLockBtn.addEventListener("click", toggleShopLock);
   el.newGameBtn.addEventListener("click", resetToDraft);
+  document.querySelectorAll(".mobile-game-nav button").forEach((button) => {
+    button.addEventListener("click", () => scrollToPanel(button.dataset.scrollTarget));
+  });
 }
 
 function renderDraft() {
@@ -406,6 +433,7 @@ function startGame(heroId) {
   state.nextOpponentId = chooseOpponentId();
   state.combat = null;
   state.gameOver = false;
+  state.shopLocked = false;
   state.lastResult = "";
   setScreen("game");
   renderGame();
@@ -416,6 +444,7 @@ function resetToDraft() {
   state.players = [];
   state.combat = null;
   state.gameOver = false;
+  state.shopLocked = false;
   state.lastResult = "";
   setScreen("draft");
   renderDraft();
@@ -425,6 +454,8 @@ function setScreen(screen) {
   el.draftScreen.classList.toggle("active", screen === "draft");
   el.gameScreen.classList.toggle("active", screen === "game");
   document.body.dataset.screen = screen;
+  window.scrollTo(0, 0);
+  if (screen === "game") setActiveMobileNav("arenaPanel");
 }
 
 function createPlayer(id, name, heroId, isUser) {
@@ -474,6 +505,10 @@ function renderActionState() {
   el.fightBtn.hidden = state.gameOver || inCombat || afterCombat;
   el.nextRoundBtn.hidden = state.gameOver || !afterCombat;
   el.rerollBtn.disabled = inCombat || afterCombat || state.gold < 2;
+  el.shopLockBtn.disabled = inCombat || afterCombat || state.gameOver;
+  el.shopLockBtn.classList.toggle("locked", state.shopLocked);
+  el.shopLockBtn.title = state.shopLocked ? "Unlock shop" : "Lock shop";
+  el.shopLockBtn.setAttribute("aria-label", state.shopLocked ? "Unlock shop" : "Lock shop");
 }
 
 function renderIdleFighters() {
@@ -502,6 +537,7 @@ function renderIdleFighters() {
 
   el.roundResult.textContent = state.lastResult || "VS";
   renderCombatAbilities(getHero(player.heroId), null);
+  renderRoundSummary();
   if (!state.combat) {
     el.combatLog.innerHTML = `<p><strong>Round ${state.round}</strong> prep phase.</p>`;
   }
@@ -511,11 +547,16 @@ function renderShop() {
   const disabled = state.gameOver || Boolean(state.combat);
   el.shopGrid.innerHTML = state.shop.map((card, index) => {
     const category = categories[card.category];
+    const rarity = getCardRarity(card);
+    const rarityMeta = rarityInfo[rarity];
     const cannotBuy = disabled || state.gold < card.cost;
     return `
-      <button class="shop-card" data-card-index="${index}" ${cannotBuy ? "disabled" : ""} style="--category-color: ${category.color}">
+      <button class="shop-card rarity-${rarity}" data-card-index="${index}" ${cannotBuy ? "disabled" : ""} style="--category-color: ${category.color}; --rarity-color: ${rarityMeta.color}">
         <div class="shop-card-header">
-          <h3>${card.name}</h3>
+          <div>
+            <span class="rarity-label">${rarityMeta.label}</span>
+            <h3>${card.name}</h3>
+          </div>
           <span class="cost">${card.cost}</span>
         </div>
         <p>${card.text}</p>
@@ -599,6 +640,53 @@ function renderCombatAbilities(hero, unit) {
   }).join("");
 }
 
+function renderRoundSummary() {
+  if (!el.roundSummary) return;
+  const player = getUser();
+  const income = incomeForRound();
+  if (state.gameOver) {
+    el.roundSummary.innerHTML = `
+      <div class="summary-card ${player.alive ? "victory" : "defeat"}">
+        <strong>${state.lastResult}</strong>
+        <span>${player.alive ? "You outlasted the lobby." : "Your hero was eliminated."}</span>
+      </div>
+    `;
+    return;
+  }
+  if (state.combat && !state.combat.finished) {
+    const leftMana = Math.round(state.combat.left.mana);
+    const rightMana = Math.round(state.combat.right.mana);
+    el.roundSummary.innerHTML = `
+      <div class="summary-card combat">
+        <strong>Combat Live</strong>
+        <span>Abilities fire automatically. Mana: you ${leftMana}/100, ${state.combat.right.player.name} ${rightMana}/100.</span>
+      </div>
+    `;
+    return;
+  }
+  if (state.combat?.finished) {
+    const resultClass = state.lastResult === "Victory" ? "victory" : "defeat";
+    const damage = roundDamage();
+    const combatOpponent = state.combat.right.player;
+    const target = state.lastResult === "Victory" ? `${combatOpponent.name} lost ${damage} health` : `You lost ${damage} health`;
+    el.roundSummary.innerHTML = `
+      <div class="summary-card ${resultClass}">
+        <strong>${state.lastResult}</strong>
+        <span>${target}. Next round income: +${income} gold.</span>
+      </div>
+    `;
+    return;
+  }
+  const opponent = getOpponent();
+  const lockText = state.shopLocked ? "Shop is locked and will stay for next round." : "Lock the shop if you want to keep these cards.";
+  el.roundSummary.innerHTML = `
+    <div class="summary-card prep">
+      <strong>Prep Phase</strong>
+      <span>Buy cards, then fight ${opponent ? opponent.name : "the final opponent"}. ${lockText}</span>
+    </div>
+  `;
+}
+
 function heroStatsMarkup(stats) {
   return `<div class="hero-stats-grid inspector-stats">${heroStatItems(stats).map((item) => `
     <div class="hero-stat tooltip-target" tabindex="0" data-tooltip="${escapeAttr(item.tooltip)}">
@@ -678,7 +766,31 @@ function rerollShop() {
   }
   state.gold -= 2;
   state.shop = generateShop();
+  state.shopLocked = false;
   renderGame();
+}
+
+function toggleShopLock() {
+  if (state.combat || state.gameOver) return;
+  state.shopLocked = !state.shopLocked;
+  showToast(state.shopLocked ? "Shop locked" : "Shop unlocked");
+  renderActionState();
+  renderRoundSummary();
+}
+
+function scrollToPanel(targetId) {
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  setActiveMobileNav(targetId);
+  const headerOffset = window.matchMedia("(max-width: 760px)").matches ? 96 : 0;
+  const top = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+  window.scrollTo(0, Math.max(0, top));
+}
+
+function setActiveMobileNav(targetId) {
+  document.querySelectorAll(".mobile-game-nav button").forEach((button) => {
+    button.classList.toggle("active", button.dataset.scrollTarget === targetId);
+  });
 }
 
 function startFight() {
@@ -1087,6 +1199,7 @@ function finishCombat(winnerSide) {
   renderCombat();
   renderHeaderAndLists();
   checkGameOver();
+  renderRoundSummary();
   renderActionState();
 }
 
@@ -1096,6 +1209,8 @@ function renderHeaderAndLists() {
   el.goldValue.textContent = state.gold;
   el.healthValue.textContent = Math.max(0, user.health);
   el.aliveValue.textContent = `${state.players.filter((item) => item.alive).length} alive`;
+  el.powerValue.textContent = `${Math.round(powerScore(user))} power`;
+  renderHeroDetails(user);
   renderStandings();
 }
 
@@ -1107,7 +1222,8 @@ function nextRound() {
   state.combat = null;
   state.lastResult = "";
   upgradeAiPlayers();
-  state.shop = generateShop();
+  if (!state.shopLocked) state.shop = generateShop();
+  state.shopLocked = false;
   state.nextOpponentId = chooseOpponentId();
   renderGame();
 }
@@ -1132,6 +1248,7 @@ function renderCombat() {
   setBar(el.rightManaBar, right.mana);
   renderCombatAbilities(left.hero, left);
   el.roundResult.textContent = combat.finished ? state.lastResult : "";
+  renderRoundSummary();
   el.combatLog.innerHTML = combat.logs.slice(-10).map((line) => `<p>${line}</p>`).join("");
   el.combatLog.scrollTop = el.combatLog.scrollHeight;
 }
@@ -1500,8 +1617,37 @@ function generateShop() {
 }
 
 function randomCard() {
-  const card = randomChoice(cardPool);
-  return { ...card };
+  const availableCards = state.round >= 4 ? cardPool : cardPool.filter((card) => card.rarity !== "legendary");
+  const card = randomChoice(availableCards);
+  const rarity = getCardRarity(card) === "legendary" ? "legendary" : rollRarity();
+  const bonus = card.rarity ? rarityBonuses.common : rarityBonuses[rarity];
+  const rarityLabel = rarityInfo[rarity].label.toLowerCase();
+  return {
+    ...card,
+    rarity,
+    cost: card.cost + bonus.cost,
+    points: card.points + bonus.points,
+    text: card.rarity || rarity === "common" ? card.text : `${card.text} This ${rarityLabel} version grants extra upgrade points.`
+  };
+}
+
+function getCardRarity(card) {
+  return rarityInfo[card?.rarity] ? card.rarity : "common";
+}
+
+function rollRarity() {
+  const allowed = rarityOrder.filter((rarity) => {
+    if (rarity === "legendary") return state.round >= 4;
+    if (rarity === "epic") return state.round >= 2;
+    return true;
+  });
+  const total = allowed.reduce((sum, rarity) => sum + rarityInfo[rarity].weight, 0);
+  let roll = Math.random() * total;
+  for (const rarity of allowed) {
+    roll -= rarityInfo[rarity].weight;
+    if (roll <= 0) return rarity;
+  }
+  return "common";
 }
 
 function setBar(node, value) {
