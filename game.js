@@ -538,6 +538,7 @@ function renderIdleFighters() {
   el.roundResult.textContent = state.lastResult || "VS";
   renderCombatAbilities(getHero(player.heroId), null);
   renderRoundSummary();
+  syncArena3d();
   if (!state.combat) {
     el.combatLog.innerHTML = `<p><strong>Round ${state.round}</strong> prep phase.</p>`;
   }
@@ -1249,6 +1250,7 @@ function renderCombat() {
   renderCombatAbilities(left.hero, left);
   el.roundResult.textContent = combat.finished ? state.lastResult : "";
   renderRoundSummary();
+  syncArena3d();
   el.combatLog.innerHTML = combat.logs.slice(-10).map((line) => `<p>${line}</p>`).join("");
   el.combatLog.scrollTop = el.combatLog.scrollHeight;
 }
@@ -1256,6 +1258,80 @@ function renderCombat() {
 function addLog(message) {
   if (!state.combat) return;
   state.combat.logs.push(message);
+}
+
+function syncArena3d() {
+  const player = getUser();
+  if (!player) return;
+  const opponent = state.combat ? null : getOpponent();
+  const payload = state.combat
+    ? {
+        phase: state.combat.finished ? "result" : "combat",
+        round: state.round,
+        left: arenaUnitFromCombat(state.combat.left),
+        right: arenaUnitFromCombat(state.combat.right)
+      }
+    : {
+        phase: "prep",
+        round: state.round,
+        left: arenaUnitFromPlayer(player, "left"),
+        right: opponent ? arenaUnitFromPlayer(opponent, "right") : null
+      };
+
+  window.__arena3DState = payload;
+  if (window.Arena3D) window.Arena3D.update(payload);
+}
+
+function arenaUnitFromCombat(unit) {
+  return {
+    side: unit.side,
+    hero: arenaHeroPayload(unit.hero),
+    hp: unit.hp,
+    maxHp: unit.stats.maxHp,
+    mana: unit.mana,
+    shield: unit.shield,
+    pose: activePose(unit),
+    alive: isAlive(unit)
+  };
+}
+
+function arenaUnitFromPlayer(player, side) {
+  const hero = getHero(player.heroId);
+  const stats = getStats(player);
+  return {
+    side,
+    hero: arenaHeroPayload(hero),
+    hp: stats.maxHp,
+    maxHp: stats.maxHp,
+    mana: 0,
+    shield: stats.startShield,
+    pose: "",
+    alive: player.alive
+  };
+}
+
+function arenaHeroPayload(hero) {
+  return {
+    id: hero.id,
+    name: hero.name,
+    color: hero.color,
+    secondary: hero.secondary,
+    shape: hero.shape
+  };
+}
+
+function triggerArena3dEffect(type, unit, enemy, options = {}) {
+  const effect = {
+    type,
+    side: unit?.side,
+    targetSide: enemy?.side,
+    color: options.color || unit?.hero?.color,
+    secondary: options.secondary || unit?.hero?.secondary,
+    tier: options.tier || "basic"
+  };
+  window.__arena3DEffectQueue = window.__arena3DEffectQueue || [];
+  if (window.Arena3D) window.Arena3D.playEffect(effect);
+  else window.__arena3DEffectQueue.push(effect);
 }
 
 function renderFighterPortrait(container, hero, variant) {
@@ -1314,9 +1390,11 @@ function flash(side, className) {
 
 function clearEffects() {
   if (el.fxLayer) el.fxLayer.innerHTML = "";
+  if (window.Arena3D) window.Arena3D.clearEffects();
 }
 
 function playStrikeEffect(unit, enemy) {
+  triggerArena3dEffect("strike", unit, enemy, { color: unit.hero.color, secondary: unit.hero.secondary });
   playPlacedEffect("fx-slash", enemy.side, unit.hero.color, unit.hero.secondary, 380, 110);
 }
 
@@ -1324,6 +1402,7 @@ function playHeroEffect(tier, unit, enemy) {
   const ultimate = tier === "ultimate";
   const hero = unit.hero;
   const burstDelay = ultimate ? 420 : 260;
+  triggerArena3dEffect("hero", unit, enemy, { color: hero.color, secondary: hero.secondary, tier });
 
   switch (hero.id) {
     case "ember-ronin":
@@ -1407,14 +1486,17 @@ function playPlacedEffect(className, side, color, secondary, duration = 620, del
 
 function playImpactEffect(unit, kind, color, secondary) {
   const className = kind === "critical" ? "fx-burst" : "fx-slash";
+  triggerArena3dEffect("impact", unit, unit, { color, secondary, tier: kind });
   playPlacedEffect(className, unit.side, color, secondary, kind === "critical" ? 580 : 360, 0);
 }
 
 function playShieldEffect(unit, delay = 0) {
+  scheduleEffect(() => triggerArena3dEffect("shield", unit, unit, { color: categories.shield.color, secondary: unit.hero.secondary }), delay);
   playPlacedEffect("fx-shield", unit.side, categories.shield.color, unit.hero.secondary, 760, delay);
 }
 
 function playHealEffect(unit, delay = 0) {
+  scheduleEffect(() => triggerArena3dEffect("heal", unit, unit, { color: categories.defense.color, secondary: "#fff8ec" }), delay);
   playPlacedEffect("fx-heal", unit.side, categories.defense.color, "#fff8ec", 820, delay);
 }
 
