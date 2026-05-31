@@ -1,6 +1,9 @@
-const THREE_URL = "https://unpkg.com/three@0.160.0/build/three.module.js";
+const THREE_URL = "three";
+const GLTF_LOADER_URL = "three/addons/loaders/GLTFLoader.js";
 
 let THREE;
+let GLTFLoader;
+let gltfLoader;
 let scene;
 let camera;
 let renderer;
@@ -35,6 +38,12 @@ async function boot() {
 
   try {
     THREE = await import(THREE_URL);
+    try {
+      ({ GLTFLoader } = await import(GLTF_LOADER_URL));
+      gltfLoader = new GLTFLoader();
+    } catch {
+      gltfLoader = null;
+    }
   } catch (error) {
     console.warn("3D arena could not load. Falling back to 2D portraits.", error);
     return;
@@ -217,6 +226,7 @@ function ensureUnit(side, payload) {
   model.group.position.set(base.x, base.y, base.z);
   scene.add(model.group);
   units[side] = model;
+  loadExternalHeroModel(model, payload.hero);
 }
 
 function applyUnitPayload(model, payload) {
@@ -235,8 +245,10 @@ function createHeroModel(hero, side) {
     dark: material("#1a1f20"),
     leather: material("#5b4030"),
     metal: material("#aab3ad", 0.58, 0.16),
+    armor: material("#2f3936", 0.7, 0.08),
+    cloth: material("#273130", 0.88, 0.01),
     stone: material("#c8cfcc", 0.88, 0.04),
-    skin: material("#e0a36f", 0.74, 0.02),
+    skin: material(heroSkinColor(hero), 0.74, 0.02),
     glow: material(secondary, 0.35, 0.08, secondary, 1.6),
     black: material("#071014", 0.72, 0)
   };
@@ -245,21 +257,21 @@ function createHeroModel(hero, side) {
   root.rotation.y = side === "left" ? -0.34 : 0.34;
   group.add(root);
 
-  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.44, 0.72, 5, 14), mats.primary);
-  body.position.y = 1.05;
-  body.scale.set(1.05, 1, 0.86);
+  const body = new THREE.Mesh(new THREE.DodecahedronGeometry(0.64, 1), mats.primary);
+  body.position.y = 1.08;
+  body.scale.set(0.82, 1.04, 0.62);
   body.castShadow = true;
   root.add(body);
 
-  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.32, 18, 12), mats.secondary);
-  belly.position.set(0, 1.02, 0.34);
-  belly.scale.set(1.08, 0.78, 0.28);
+  const belly = new THREE.Mesh(new THREE.DodecahedronGeometry(0.31, 0), mats.secondary);
+  belly.position.set(0, 1.06, 0.38);
+  belly.scale.set(1.08, 0.74, 0.3);
   belly.castShadow = true;
   root.add(belly);
 
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.54, 24, 18), mats.skin);
+  const head = new THREE.Mesh(new THREE.DodecahedronGeometry(0.56, 1), mats.skin);
   head.position.y = 1.82;
-  head.scale.set(1.02, 0.94, 1);
+  head.scale.set(1.04, 0.92, 0.98);
   head.castShadow = true;
   root.add(head);
 
@@ -303,6 +315,7 @@ function createHeroModel(hero, side) {
     rightLeg
   };
 
+  addCoreModelDetails(root, mats, parts);
   addHeroAccessories(root, hero, mats, parts);
 
   const aura = new THREE.Mesh(
@@ -337,12 +350,16 @@ function createHeroModel(hero, side) {
 function addHeroAccessories(root, hero, mats, parts) {
   switch (hero.shape) {
     case "flame":
+      addHelmet(root, mats.armor, mats.secondary);
+      addShoulders(root, mats.metal, 0.22);
       addSword(root, mats.metal, mats.secondary, [0.68, 1.14, 0.12], -0.45);
       addFlames(root, mats.secondary, mats.primary);
       break;
     case "tide":
+      parts.body.scale.set(0.98, 1.08, 0.72);
+      addShellPlates(root, mats.metal, mats.secondary);
       addShield(root, mats.secondary, [-0.68, 1.08, 0.2], 0.52);
-      addShoulders(root, mats.metal, 0.18);
+      addShoulders(root, mats.metal, 0.24);
       break;
     case "veil":
       addHood(root, mats.dark, mats.primary);
@@ -351,31 +368,80 @@ function addHeroAccessories(root, hero, mats, parts) {
       break;
     case "saint":
       addHelmet(root, mats.metal, mats.secondary);
+      addShoulders(root, mats.metal, 0.24);
       addShield(root, mats.primary, [-0.68, 1.12, 0.25], 0.62);
       addHammer(root, mats.metal, mats.secondary, [0.62, 1.1, 0.08]);
       break;
     case "storm":
+      addRobePanels(root, mats.primary, mats.secondary);
       addStaff(root, mats.metal, mats.glow, [0.62, 1.1, 0.12]);
       addCrown(root, mats.secondary);
       break;
     case "thorn":
-      parts.body.scale.set(1.24, 1.08, 1);
+      parts.body.scale.set(1.18, 1.08, 0.9);
       parts.head.position.y = 1.75;
+      addShoulders(root, mats.secondary, 0.26);
       addHorns(root, mats.secondary);
       addClaws(root, mats.metal);
       break;
     case "prism":
+      addShoulders(root, mats.secondary, 0.16);
       addBow(root, mats.secondary, [0.66, 1.13, 0.14]);
       addQuiver(root, mats.dark, mats.secondary);
       break;
     case "void":
       addHood(root, mats.primary, mats.dark);
       addCape(root, mats.dark);
+      addRobePanels(root, mats.dark, mats.secondary);
       addOrb(root, mats.glow, [0.62, 1.24, 0.28]);
       break;
     default:
       addSword(root, mats.metal, mats.secondary, [0.68, 1.14, 0.12], -0.45);
   }
+}
+
+function addCoreModelDetails(root, mats, parts) {
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.2, 10), mats.skin);
+  neck.position.y = 1.48;
+  neck.castShadow = true;
+  root.add(neck);
+
+  const belt = createBox(0.78, 0.14, 0.68, mats.dark, [0, 0.73, 0.02]);
+  const buckle = createBox(0.16, 0.16, 0.08, mats.secondary, [0, 0.75, 0.38]);
+  root.add(belt, buckle);
+
+  const chestTop = createBox(0.62, 0.12, 0.11, mats.armor, [0, 1.35, 0.42]);
+  const chestLeft = createBox(0.25, 0.33, 0.1, mats.armor, [-0.17, 1.15, 0.45]);
+  const chestRight = createBox(0.25, 0.33, 0.1, mats.armor, [0.17, 1.15, 0.45]);
+  root.add(chestTop, chestLeft, chestRight);
+
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.16, 6), mats.skin);
+  nose.position.set(0, 1.81, 0.58);
+  nose.rotation.x = Math.PI / 2;
+  nose.castShadow = true;
+  root.add(nose);
+
+  const mouth = createBox(0.18, 0.025, 0.02, mats.dark, [0, 1.66, 0.55]);
+  mouth.rotation.x = 0.1;
+  root.add(mouth);
+
+  const leftHand = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14, 0), mats.skin);
+  leftHand.position.set(-0.68, 0.76, 0.18);
+  leftHand.castShadow = true;
+  const rightHand = leftHand.clone();
+  rightHand.position.x = 0.68;
+  root.add(leftHand, rightHand);
+
+  const leftGauntlet = createBox(0.19, 0.2, 0.2, mats.armor, [-0.58, 0.86, 0.13]);
+  const rightGauntlet = createBox(0.19, 0.2, 0.2, mats.armor, [0.58, 0.86, 0.13]);
+  root.add(leftGauntlet, rightGauntlet);
+
+  const leftKnee = createBox(0.2, 0.14, 0.12, mats.armor, [-0.23, 0.46, 0.18]);
+  const rightKnee = createBox(0.2, 0.14, 0.12, mats.armor, [0.23, 0.46, 0.18]);
+  root.add(leftKnee, rightKnee);
+
+  parts.leftHand = leftHand;
+  parts.rightHand = rightHand;
 }
 
 function addSword(root, bladeMat, hiltMat, pos, zRot) {
@@ -427,6 +493,26 @@ function addQuiver(root, mat, arrowMat) {
     arrow.rotation.z = -0.42;
     root.add(arrow);
   }
+}
+
+function addShellPlates(root, plateMat, trimMat) {
+  for (let i = 0; i < 4; i += 1) {
+    const plate = createBox(0.42, 0.16, 0.12, i % 2 ? plateMat : trimMat, [-0.27 + i * 0.18, 1.26 - i * 0.13, -0.46]);
+    plate.rotation.x = -0.24;
+    plate.rotation.z = -0.18 + i * 0.12;
+    root.add(plate);
+  }
+}
+
+function addRobePanels(root, clothMat, trimMat) {
+  const center = createBox(0.34, 0.78, 0.08, clothMat, [0, 0.62, 0.43]);
+  center.rotation.x = 0.1;
+  const left = createBox(0.22, 0.7, 0.07, clothMat, [-0.26, 0.6, 0.37]);
+  left.rotation.z = -0.14;
+  const right = createBox(0.22, 0.7, 0.07, clothMat, [0.26, 0.6, 0.37]);
+  right.rotation.z = 0.14;
+  const trim = createBox(0.42, 0.07, 0.08, trimMat, [0, 0.98, 0.47]);
+  root.add(center, left, right, trim);
 }
 
 function addOrb(root, mat, pos) {
@@ -529,7 +615,8 @@ function material(color, roughness = 0.78, metalness = 0.04, emissive = null, em
     roughness,
     metalness,
     emissive: emissive || "#000000",
-    emissiveIntensity
+    emissiveIntensity,
+    flatShading: true
   });
 }
 
@@ -543,6 +630,59 @@ function transparentMaterial(color, opacity, emissiveIntensity = 0) {
     emissive: color,
     emissiveIntensity,
     depthWrite: false
+  });
+}
+
+function heroSkinColor(hero) {
+  const colors = {
+    flame: "#d99b63",
+    tide: "#83b7ad",
+    veil: "#9ba9c9",
+    saint: "#e3b07a",
+    storm: "#d8d3c4",
+    thorn: "#84a165",
+    prism: "#d8a06f",
+    void: "#8798bd"
+  };
+  return colors[hero.shape] || "#d99b63";
+}
+
+async function loadExternalHeroModel(model, hero) {
+  if (!gltfLoader || !model || !hero?.id) return;
+  const url = `assets/models/${hero.id}.glb`;
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    if (!response.ok) return;
+    const gltf = await gltfLoader.loadAsync(url);
+    if (!model.group || model.heroId !== hero.id) return;
+    const assetRoot = gltf.scene;
+    prepareExternalModel(assetRoot);
+    model.parts.root.visible = false;
+    model.group.add(assetRoot);
+    model.parts.assetRoot = assetRoot;
+  } catch {
+    // Missing model files intentionally fall back to the procedural rig.
+  }
+}
+
+function prepareExternalModel(assetRoot) {
+  const box = new THREE.Box3().setFromObject(assetRoot);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+  const scale = 2.35 / Math.max(size.x || 1, size.y || 1, size.z || 1);
+  assetRoot.position.sub(center);
+  assetRoot.scale.setScalar(scale);
+  assetRoot.position.y = 1.15;
+  assetRoot.traverse((node) => {
+    if (!node.isMesh) return;
+    node.castShadow = true;
+    node.receiveShadow = true;
+    if (node.material) {
+      node.material.flatShading = true;
+      node.material.needsUpdate = true;
+    }
   });
 }
 
