@@ -18,12 +18,16 @@ const units = {
 };
 
 const effects = [];
+const knownHeroes = new Map();
+const modelViewers = new Map();
 const basePositions = {
   left: { x: -2.35, y: 0, z: 0.12 },
   right: { x: 2.35, y: 0, z: -0.12 }
 };
 
 const api = {
+  setHeroes,
+  hydrateViewers,
   update,
   playEffect,
   clearEffects
@@ -53,7 +57,9 @@ async function boot() {
   arenaReady = true;
   document.body.classList.add("arena-3d-ready");
 
+  if (Array.isArray(window.__arena3DHeroes)) setHeroes(window.__arena3DHeroes);
   if (window.__arena3DState) update(window.__arena3DState);
+  if (window.__arena3DNeedsHydrate) hydrateViewers();
   if (Array.isArray(window.__arena3DEffectQueue)) {
     window.__arena3DEffectQueue.splice(0).forEach((effect) => playEffect(effect));
   }
@@ -195,6 +201,108 @@ function addStone(group, material, x, z, sx, sz) {
   block.castShadow = true;
   block.receiveShadow = true;
   group.add(block);
+}
+
+function setHeroes(heroes) {
+  if (!Array.isArray(heroes)) return;
+  heroes.forEach((hero) => {
+    if (!hero?.id) return;
+    knownHeroes.set(hero.id, {
+      id: hero.id,
+      name: hero.name,
+      color: hero.color,
+      secondary: hero.secondary,
+      shape: hero.shape
+    });
+  });
+}
+
+function hydrateViewers(root = document) {
+  if (!arenaReady) {
+    window.__arena3DNeedsHydrate = true;
+    return;
+  }
+
+  modelViewers.forEach((viewer, element) => {
+    if (!document.body.contains(element) || !isViewerInActiveScreen(element)) disposeViewer(element);
+  });
+
+  root.querySelectorAll(".hero-3d-viewer").forEach((element) => {
+    if (!isViewerInActiveScreen(element)) return;
+    if (modelViewers.has(element)) return;
+    const hero = getViewerHero(element);
+    if (!hero) return;
+    const viewer = createModelViewer(element, hero);
+    modelViewers.set(element, viewer);
+    resizeViewer(element);
+    element.classList.add("model-ready");
+  });
+
+  window.__arena3DNeedsHydrate = false;
+}
+
+function getViewerHero(element) {
+  const id = element.dataset.heroId;
+  return knownHeroes.get(id) || {
+    id,
+    name: element.dataset.heroName || id,
+    color: element.dataset.heroColor || "#d95748",
+    secondary: element.dataset.heroSecondary || "#f2b84b",
+    shape: element.dataset.heroShape || "flame"
+  };
+}
+
+function createModelViewer(element, hero) {
+  const viewerScene = new THREE.Scene();
+  const viewerCamera = new THREE.PerspectiveCamera(34, 1, 0.1, 20);
+  const viewerRenderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    preserveDrawingBuffer: true
+  });
+  viewerRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  viewerRenderer.shadowMap.enabled = true;
+  viewerRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  element.appendChild(viewerRenderer.domElement);
+
+  const hemi = new THREE.HemisphereLight(0xfff1d6, 0x18221e, 1.45);
+  viewerScene.add(hemi);
+  const key = new THREE.DirectionalLight(0xffd89a, 1.85);
+  key.position.set(-2.6, 4.2, 4.4);
+  key.castShadow = true;
+  viewerScene.add(key);
+  const rim = new THREE.DirectionalLight(0x7de4dc, 0.8);
+  rim.position.set(2.8, 2.2, -3);
+  viewerScene.add(rim);
+
+  const model = createHeroModel(hero, "left");
+  model.group.position.set(0, -0.08, 0);
+  model.group.scale.setScalar(viewerScale(element.dataset.viewerVariant));
+  viewerScene.add(model.group);
+  loadExternalHeroModel(model, hero);
+
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.78, 0.88, 0.08, 36),
+    transparentMaterial(hero.secondary || "#f2b84b", 0.26, 0.25)
+  );
+  base.position.y = -0.02;
+  viewerScene.add(base);
+
+  const observer = new ResizeObserver(() => resizeViewer(element));
+  observer.observe(element);
+
+  const viewer = {
+    element,
+    hero,
+    scene: viewerScene,
+    camera: viewerCamera,
+    renderer: viewerRenderer,
+    model,
+    base,
+    observer,
+    variant: element.dataset.viewerVariant || "card"
+  };
+  return viewer;
 }
 
 function update(payload) {
@@ -694,6 +802,37 @@ function animate() {
   updateModel(units.right, time, delta);
   updateEffects(delta);
   renderer.render(scene, camera);
+  updateModelViewers(time);
+}
+
+function updateModelViewers(time) {
+  modelViewers.forEach((viewer, element) => {
+    if (!document.body.contains(element)) {
+      disposeViewer(element);
+      return;
+    }
+    if (!isViewerVisible(element)) return;
+
+    const root = viewer.model.parts.root;
+    const variant = viewer.variant;
+    const compact = variant.includes("mini") || variant.includes("standing");
+    root.rotation.y = Math.sin(time * 0.45 + viewer.hero.id.length) * 0.1;
+    root.position.y = Math.sin(time * 1.8 + viewer.hero.id.length) * (compact ? 0.025 : 0.04);
+    viewer.model.parts.leftArm.rotation.x = Math.sin(time * 2.5) * 0.08;
+    viewer.model.parts.rightArm.rotation.x = -Math.sin(time * 2.4) * 0.08;
+    viewer.base.rotation.y += 0.006;
+    viewer.renderer.render(viewer.scene, viewer.camera);
+  });
+}
+
+function isViewerVisible(element) {
+  const rect = element.getBoundingClientRect();
+  return rect.width > 4 && rect.height > 4 && rect.bottom >= 0 && rect.top <= window.innerHeight;
+}
+
+function isViewerInActiveScreen(element) {
+  const screen = element.closest(".screen");
+  return !screen || screen.classList.contains("active");
 }
 
 function updateModel(model, time, delta) {
@@ -849,6 +988,44 @@ function resize() {
   camera.updateProjectionMatrix();
 }
 
+function resizeViewer(element) {
+  const viewer = modelViewers.get(element);
+  if (!viewer) return;
+  const width = Math.max(1, element.clientWidth);
+  const height = Math.max(1, element.clientHeight);
+  viewer.renderer.setSize(width, height, false);
+  viewer.camera.aspect = width / height;
+
+  const preset = viewerCameraPreset(viewer.variant, width, height);
+  viewer.camera.fov = preset.fov;
+  viewer.camera.position.set(preset.x, preset.y, preset.z);
+  viewer.camera.lookAt(0, preset.lookY, 0);
+  viewer.camera.updateProjectionMatrix();
+}
+
+function viewerCameraPreset(variant, width, height) {
+  if (variant.includes("mini")) {
+    return { fov: 31, x: 0, y: 1.56, z: 4.35, lookY: 1.22 };
+  }
+  if (variant.includes("combat")) {
+    return { fov: 32, x: 0, y: 1.9, z: 4.9, lookY: 1.05 };
+  }
+  const tall = height > width * 0.82;
+  return {
+    fov: tall ? 31 : 34,
+    x: 0,
+    y: tall ? 1.9 : 1.75,
+    z: tall ? 4.75 : 4.95,
+    lookY: 1.05
+  };
+}
+
+function viewerScale(variant = "") {
+  if (variant.includes("mini")) return 0.62;
+  if (variant.includes("combat")) return 1.0;
+  return 0.9;
+}
+
 function getBasePosition(side) {
   const fallback = basePositions[side] || { x: 0, y: 0, z: 0 };
   const narrow = container ? container.clientWidth < 620 : false;
@@ -860,8 +1037,23 @@ function getBasePosition(side) {
   };
 }
 
+function disposeViewer(element) {
+  const viewer = modelViewers.get(element);
+  if (!viewer) return;
+  viewer.observer.disconnect();
+  viewer.renderer.dispose();
+  viewer.renderer.forceContextLoss();
+  if (viewer.renderer.domElement.parentElement) {
+    viewer.renderer.domElement.remove();
+  }
+  disposeObject(viewer.model.group);
+  disposeObject(viewer.base);
+  modelViewers.delete(element);
+}
+
 function disposeObject(mesh) {
   if (!mesh) return;
+  if (mesh.children) mesh.children.forEach((child) => disposeObject(child));
   if (mesh.geometry) mesh.geometry.dispose();
   if (mesh.material) {
     if (Array.isArray(mesh.material)) mesh.material.forEach((item) => item.dispose());

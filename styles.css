@@ -1559,7 +1559,7 @@ button:disabled {
   transform: translate(-13%, -16%);
 }
 
-/* Real generated sprite/model assets */
+/* Live 3D hero model surfaces */
 .sprite-stage {
   position: relative;
   width: 100%;
@@ -1569,6 +1569,34 @@ button:disabled {
   place-items: end center;
   overflow: visible;
   isolation: isolate;
+}
+
+.hero-3d-viewer {
+  overflow: hidden;
+}
+
+.hero-3d-viewer canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter:
+    drop-shadow(0 18px 14px rgba(0,0,0,0.42))
+    drop-shadow(0 0 10px color-mix(in srgb, var(--hero-color) 26%, transparent));
+}
+
+.model-loading {
+  position: relative;
+  z-index: 1;
+  color: color-mix(in srgb, var(--hero-color) 62%, var(--text));
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.hero-3d-viewer.model-ready .model-loading {
+  display: none;
 }
 
 .sprite-aura {
@@ -1594,48 +1622,27 @@ button:disabled {
   box-shadow: 0 15px 24px rgba(0,0,0,0.34), inset 0 0 18px rgba(0,0,0,0.28);
 }
 
-.hero-sprite {
-  position: relative;
-  z-index: 2;
-  display: block;
-  width: auto;
-  max-width: 98%;
-  max-height: 106%;
-  object-fit: contain;
-  filter: drop-shadow(0 16px 12px rgba(0,0,0,0.48)) drop-shadow(0 0 12px color-mix(in srgb, var(--hero-color) 38%, transparent));
-  user-select: none;
-  pointer-events: none;
-}
-
 .hero-art .sprite-stage {
   min-height: 100%;
   transform: translateY(2px);
 }
 
-.hero-art .hero-sprite {
-  max-width: 104%;
-  max-height: 112%;
-}
-
-.inspector-art .hero-sprite {
-  max-width: 96%;
-  max-height: 112%;
+.hero-art .hero-3d-viewer canvas {
+  transform: translateY(2%);
 }
 
 .mini-portrait .sprite-stage {
   min-height: 100%;
 }
 
+.mini-portrait .hero-3d-viewer canvas,
+.standing-avatar .hero-3d-viewer canvas {
+  filter: drop-shadow(0 9px 8px rgba(0,0,0,0.48));
+}
+
 .mini-portrait .sprite-aura,
 .mini-portrait .sprite-base {
   display: none;
-}
-
-.mini-portrait .hero-sprite {
-  max-width: none;
-  max-height: none;
-  width: 155%;
-  transform: translateY(16%);
 }
 
 .fighter-portrait .sprite-stage {
@@ -1653,21 +1660,14 @@ button:disabled {
   width: 60%;
 }
 
-.fighter-portrait .hero-sprite {
-  max-width: none;
-  max-height: none;
-  width: 130%;
-  transform: translateY(8%);
-  filter: drop-shadow(0 24px 18px rgba(0,0,0,0.58)) drop-shadow(0 0 18px color-mix(in srgb, var(--hero-color) 44%, transparent));
+.fighter-portrait .hero-3d-viewer canvas {
+  filter:
+    drop-shadow(0 24px 18px rgba(0,0,0,0.58))
+    drop-shadow(0 0 18px color-mix(in srgb, var(--hero-color) 44%, transparent));
 }
 
-.fighter-right .fighter-portrait .hero-sprite {
-  transform: translateY(8%) scaleX(-1);
-}
-
-.inspector-art .hero-sprite {
-  max-width: 84%;
-  max-height: 102%;
+.fighter-right .fighter-portrait .hero-3d-viewer canvas {
+  transform: scaleX(-1);
 }
 
 /* Mobile battler polish */
@@ -1710,13 +1710,6 @@ body[data-screen="game"] {
   display: none;
 }
 
-.standing-avatar .hero-sprite {
-  width: 176%;
-  max-width: none;
-  max-height: none;
-  transform: translateY(18%);
-}
-
 .sprite-stage {
   transform-style: preserve-3d;
 }
@@ -1738,13 +1731,6 @@ body[data-screen="game"] {
 .hero-mini-sprite .sprite-base,
 .hero-mini-sprite .sprite-shadow {
   display: none;
-}
-
-.hero-mini-sprite .hero-sprite {
-  width: 160%;
-  max-width: none;
-  max-height: none;
-  transform: translateY(17%);
 }
 
 .fighter-portrait {
@@ -1772,7 +1758,7 @@ body[data-screen="game"] {
   animation: chargedAura 1050ms ease-in-out infinite;
 }
 
-.fighter.low-health .hero-sprite {
+.fighter.low-health .hero-3d-viewer canvas {
   filter:
     drop-shadow(0 24px 18px rgba(0,0,0,0.58))
     drop-shadow(0 0 18px rgba(236,91,75,0.45))
@@ -1826,15 +1812,6 @@ body[data-screen="game"] {
 
 .arena-board .fighter-portrait {
   width: min(300px, 100%);
-}
-
-.fighter-portrait .hero-sprite {
-  width: 144%;
-  transform: translateY(7%);
-}
-
-.fighter-right .fighter-portrait .hero-sprite {
-  transform: translateY(7%) scaleX(-1);
 }
 
 .arena-board .round-result {
@@ -2014,10 +1991,6 @@ body[data-screen="game"] {
 
   .arena-board .fighter-portrait {
     width: min(225px, 100%);
-  }
-
-  .fighter-portrait .hero-sprite {
-    width: 132%;
   }
 
   .arena-board .fighter-info {
@@ -2213,17 +2186,12 @@ body {
     rgba(10, 12, 11, 0.88);
 }
 
-.fighter-portrait .hero-sprite {
-  width: 152%;
+.fighter-portrait .hero-3d-viewer canvas {
   filter:
     drop-shadow(0 28px 16px rgba(0,0,0,0.68))
     drop-shadow(0 0 14px color-mix(in srgb, var(--hero-color) 34%, transparent))
     saturate(1.12)
     contrast(1.04);
-}
-
-.fighter-right .fighter-portrait .hero-sprite {
-  transform: translateY(7%) scaleX(-1);
 }
 
 .sprite-aura {
@@ -2286,10 +2254,6 @@ body {
     right: 1%;
     bottom: 150px;
   }
-
-  .fighter-portrait .hero-sprite {
-    width: 142%;
-  }
 }
 
 @media (max-width: 430px) {
@@ -2309,24 +2273,6 @@ body {
     radial-gradient(ellipse at 50% 82%, rgba(0,0,0,0.38), transparent 58%),
     linear-gradient(180deg, rgba(255,255,255,0.06), transparent 42%),
     linear-gradient(145deg, #1a211d, #0b0d0c 74%);
-}
-
-.hero-sprite {
-  filter:
-    drop-shadow(0 16px 10px rgba(0,0,0,0.48))
-    drop-shadow(0 0 10px color-mix(in srgb, var(--hero-color) 32%, transparent))
-    saturate(1.08)
-    contrast(1.03);
-}
-
-.hero-art .hero-sprite {
-  max-width: 96%;
-  max-height: 104%;
-}
-
-.inspector-art .hero-sprite {
-  max-width: 78%;
-  max-height: 98%;
 }
 
 .sprite-aura {
@@ -2354,33 +2300,16 @@ body {
     color-mix(in srgb, var(--stone) 78%, var(--hero-color));
 }
 
-.mini-portrait .hero-sprite,
-.hero-mini-sprite .hero-sprite {
-  width: 138%;
-  transform: translateY(13%);
-}
-
-.standing-avatar .hero-sprite {
-  width: 146%;
-  transform: translateY(13%);
-}
-
 .arena-board .fighter-portrait {
   width: min(292px, 100%);
 }
 
-.fighter-portrait .hero-sprite {
-  width: 132%;
-  transform: translateY(5%);
+.fighter-portrait .hero-3d-viewer canvas {
   filter:
     drop-shadow(0 27px 14px rgba(0,0,0,0.66))
     drop-shadow(0 0 12px color-mix(in srgb, var(--hero-color) 30%, transparent))
     saturate(1.1)
     contrast(1.04);
-}
-
-.fighter-right .fighter-portrait .hero-sprite {
-  transform: translateY(5%) scaleX(-1);
 }
 
 .fighter-portrait .sprite-base {
@@ -2421,10 +2350,6 @@ body {
 
   .arena-board .fighter-portrait {
     width: min(210px, 100%);
-  }
-
-  .fighter-portrait .hero-sprite {
-    width: 125%;
   }
 }
 

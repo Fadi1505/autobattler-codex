@@ -343,6 +343,7 @@ const el = {};
 document.addEventListener("DOMContentLoaded", () => {
   bindElements();
   bindEvents();
+  registerArena3dHeroes();
   renderDraft();
 });
 
@@ -372,6 +373,20 @@ function bindEvents() {
   });
 }
 
+function registerArena3dHeroes() {
+  window.__arena3DHeroes = heroes.map(arenaHeroPayload);
+  if (window.Arena3D) window.Arena3D.setHeroes(window.__arena3DHeroes);
+}
+
+function refreshHero3dViewers() {
+  window.__arena3DNeedsHydrate = true;
+  if (!window.Arena3D) return;
+  window.requestAnimationFrame(() => {
+    window.Arena3D.setHeroes(window.__arena3DHeroes || heroes.map(arenaHeroPayload));
+    window.Arena3D.hydrateViewers();
+  });
+}
+
 function renderDraft() {
   renderDraftSlots();
   el.heroGrid.innerHTML = heroes.map((hero) => `
@@ -391,6 +406,7 @@ function renderDraft() {
   });
 
   renderHeroInspector(getHero(state.selectedHeroId));
+  refreshHero3dViewers();
 }
 
 function renderDraftSlots() {
@@ -497,6 +513,7 @@ function renderGame() {
   } else {
     renderIdleFighters();
   }
+  refreshHero3dViewers();
 }
 
 function renderActionState() {
@@ -1804,16 +1821,11 @@ function heroMiniSprite(hero) {
 
 function heroSpriteMarkup(hero, variant, label) {
   return `
-    <div class="sprite-stage ${variant}" data-hero-id="${hero.id}" data-hero-shape="${hero.shape}" style="--hero-color: ${hero.color}; --hero-secondary: ${hero.secondary}" role="img" aria-label="${hero.name} ${label}">
+    <div class="sprite-stage hero-3d-viewer ${variant}" data-hero-id="${hero.id}" data-hero-name="${escapeAttr(hero.name)}" data-hero-shape="${hero.shape}" data-hero-color="${hero.color}" data-hero-secondary="${hero.secondary}" data-viewer-variant="${variant}" style="--hero-color: ${hero.color}; --hero-secondary: ${hero.secondary}" role="img" aria-label="${hero.name} ${label}">
       <span class="sprite-aura"></span>
       <span class="sprite-shadow"></span>
       <span class="sprite-base"></span>
-      <img class="hero-sprite" src="${heroSpritePath(hero)}" alt="${hero.name}" draggable="false">
+      <span class="model-loading">3D</span>
     </div>
   `;
 }
-
-function heroSpritePath(hero) {
-  return `assets/heroes/${hero.id}.png`;
-}
-
