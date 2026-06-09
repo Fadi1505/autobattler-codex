@@ -1190,12 +1190,14 @@ async function loadExternalHeroModel(model, hero) {
       if (!model.group || model.heroId !== hero.id) return;
       const assetRoot = gltf.scene;
       const assetContainer = new THREE.Group();
-      prepareExternalModel(assetRoot, candidate.height || 2.55);
+      prepareExternalModel(assetRoot, candidate);
+      if (candidate.rotationY) assetRoot.rotation.y = candidate.rotationY;
       assetContainer.add(assetRoot);
       model.parts.root.visible = false;
       model.group.add(assetContainer);
       model.parts.assetRoot = assetContainer;
       model.parts.externalScene = assetRoot;
+      setupModelAnimations(model, gltf.animations, candidate);
       return;
     } catch {
       // Missing or blocked model files intentionally fall back to the next candidate.
@@ -1214,6 +1216,25 @@ async function canLoadAsset(url) {
 }
 
 function heroModelCandidates(hero) {
+  if (hero.id === "prism-archer") {
+    return [
+      {
+        url: "assets/models/meshy-archer-animations.glb",
+        height: 1.23,
+        centerY: 0.74,
+        defaultAnimation: "Walking",
+        animationMap: {
+          attacking: "Archery_Shot",
+          casting: "Archery_Shot_1",
+          dodging: "Running",
+          victory: "Running",
+          default: "Walking"
+        }
+      },
+      { url: "assets/models/kaykit-adventurer-rogue.glb", height: 2.16 }
+    ];
+  }
+
   const modelMap = {
     "ember-ronin": "rogue",
     "tide-warden": "knight",
@@ -1221,14 +1242,15 @@ function heroModelCandidates(hero) {
     "iron-saint": "knight",
     "storm-oracle": "mage",
     "thorn-beast": "barbarian",
-    "prism-archer": "rogue",
     "void-alchemist": "mage"
   };
   const assetName = modelMap[hero.id] || "knight";
-  return [{ url: `assets/models/kaykit-adventurer-${assetName}.glb`, mode: "full", height: 2.16 }];
+  return [{ url: `assets/models/kaykit-adventurer-${assetName}.glb`, height: 2.16 }];
 }
 
-function prepareExternalModel(assetRoot, targetHeight = 2.35) {
+function prepareExternalModel(assetRoot, candidate = {}) {
+  const targetHeight = candidate.height || 2.35;
+  const centerY = candidate.centerY ?? 1.15;
   const box = new THREE.Box3().setFromObject(assetRoot);
   const size = new THREE.Vector3();
   const center = new THREE.Vector3();
@@ -1237,7 +1259,7 @@ function prepareExternalModel(assetRoot, targetHeight = 2.35) {
   const scale = targetHeight / Math.max(size.y || 1, 0.001);
   assetRoot.position.sub(center);
   assetRoot.scale.setScalar(scale);
-  assetRoot.position.y = 1.15;
+  assetRoot.position.y = centerY;
   assetRoot.traverse((node) => {
     if (!node.isMesh) return;
     node.castShadow = true;
@@ -1249,6 +1271,15 @@ function prepareExternalModel(assetRoot, targetHeight = 2.35) {
   });
 }
 
+function setupModelAnimations(model, animations = [], candidate = {}) {
+  if (!animations.length) return;
+  const mixer = new THREE.AnimationMixer(model.parts.externalScene || model.parts.assetRoot);
+  model.parts.animationMixer = mixer;
+  model.parts.animationClips = animations;
+  model.parts.animationMap = candidate.animationMap || {};
+  setModelAnimation(model, candidate.defaultAnimation || "Walking");
+}
+
 function animate() {
   if (!renderer || !scene || !camera) return;
   const delta = Math.min(clock.getDelta(), 0.05);
@@ -1257,10 +1288,10 @@ function animate() {
   updateModel(units.right, time, delta);
   updateEffects(delta);
   renderer.render(scene, camera);
-  updateModelViewers(time);
+  updateModelViewers(time, delta);
 }
 
-function updateModelViewers(time) {
+function updateModelViewers(time, delta) {
   modelViewers.forEach((viewer, element) => {
     if (!document.body.contains(element)) {
       disposeViewer(element);
@@ -1276,6 +1307,7 @@ function updateModelViewers(time) {
     viewer.model.parts.leftArm.rotation.x = Math.sin(time * 2.5) * 0.08;
     viewer.model.parts.rightArm.rotation.x = -Math.sin(time * 2.4) * 0.08;
     viewer.base.rotation.y += 0.006;
+    advanceModelAnimation(viewer.model, delta, "default");
     viewer.renderer.render(viewer.scene, viewer.camera);
   });
 }
@@ -1333,6 +1365,7 @@ function updateModel(model, time, delta) {
     model.parts.rightArm.rotation.x = -0.75;
   }
   if (pose === "guarding") model.parts.leftArm.rotation.x = -0.35;
+  advanceModelAnimation(model, delta, pose);
 
   const lowHealth = hpRatio <= 0.32;
   model.parts.body.material.emissiveIntensity = lowHealth ? 0.12 : 0;
@@ -1344,6 +1377,40 @@ function updateModel(model, time, delta) {
 
 function animatedModelRoot(model) {
   return model.parts.assetRoot || model.parts.root;
+}
+
+function advanceModelAnimation(model, delta, pose = "default") {
+  const mixer = model?.parts?.animationMixer;
+  if (!mixer) return;
+  const map = model.parts.animationMap || {};
+  const name = map[pose] || map.default || "Walking";
+  setModelAnimation(model, name);
+  mixer.update(delta);
+}
+
+function setModelAnimation(model, preferredName) {
+  const clips = model?.parts?.animationClips || [];
+  if (!clips.length) return;
+  const clip = findAnimationClip(clips, preferredName) || clips[0];
+  if (!clip || model.parts.currentAnimation === clip.name) return;
+  const action = model.parts.animationMixer.clipAction(clip);
+  action.enabled = true;
+  action.reset();
+  action.fadeIn(0.12);
+  action.play();
+
+  if (model.parts.currentAction && model.parts.currentAction !== action) {
+    model.parts.currentAction.fadeOut(0.12);
+  }
+
+  model.parts.currentAction = action;
+  model.parts.currentAnimation = clip.name;
+}
+
+function findAnimationClip(clips, preferredName = "") {
+  const normalized = preferredName.toLowerCase();
+  return clips.find((clip) => clip.name === preferredName)
+    || clips.find((clip) => clip.name.toLowerCase().includes(normalized));
 }
 
 function playEffect(effect) {

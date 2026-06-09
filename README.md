@@ -19,3 +19,5 @@ Do not open `index.html` directly if you want the 3D hero models. Browsers block
 ## 3D Models
 
 The current hero models use the KayKit Adventurers character pack, which is CC0. The license file is included in `assets/models/KayKit_Adventurers_CC0_License.txt`.
+
+`Prism Archer` also uses the user-provided Meshy archer GLB from `C:\Dev\Assets`, including its embedded archery, running, and walking animations.
