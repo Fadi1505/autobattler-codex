@@ -357,61 +357,42 @@ function createHeroModel(hero, side) {
     cloth: material("#273130", 0.88, 0.01),
     stone: material("#c8cfcc", 0.88, 0.04),
     skin: material(heroSkinColor(hero), 0.74, 0.02),
+    bone: material("#d8ccb2", 0.72, 0.02),
+    wood: material("#5a3b25", 0.86, 0.02),
+    gold: material("#f1b84e", 0.48, 0.16),
+    white: material("#f7efe1", 0.66, 0.01),
     glow: material(secondary, 0.35, 0.08, secondary, 1.6),
     black: material("#071014", 0.72, 0)
   };
+  const profile = heroModelProfile(hero.shape);
 
   const root = new THREE.Group();
   root.rotation.y = side === "left" ? -0.34 : 0.34;
   group.add(root);
 
-  const body = new THREE.Mesh(new THREE.DodecahedronGeometry(0.64, 1), mats.primary);
-  body.position.y = 1.08;
-  body.scale.set(0.82, 1.04, 0.62);
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 0.58, 5, 12), profile.bodyMaterial === "cloth" ? mats.cloth : mats.primary);
+  body.position.set(0, profile.bodyY, 0);
+  body.scale.set(profile.bodyScale[0], profile.bodyScale[1], profile.bodyScale[2]);
   body.castShadow = true;
+  body.receiveShadow = true;
   root.add(body);
 
-  const belly = new THREE.Mesh(new THREE.DodecahedronGeometry(0.31, 0), mats.secondary);
-  belly.position.set(0, 1.06, 0.38);
-  belly.scale.set(1.08, 0.74, 0.3);
-  belly.castShadow = true;
-  root.add(belly);
-
-  const head = new THREE.Mesh(new THREE.DodecahedronGeometry(0.56, 1), mats.skin);
-  head.position.y = 1.82;
-  head.scale.set(1.04, 0.92, 0.98);
+  const head = new THREE.Mesh(new THREE.DodecahedronGeometry(profile.headRadius, 1), mats.skin);
+  head.position.set(0, profile.headY, profile.headZ || 0);
+  head.scale.set(profile.headScale[0], profile.headScale[1], profile.headScale[2]);
   head.castShadow = true;
+  head.receiveShadow = true;
   root.add(head);
 
-  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8), mats.black);
-  const eyeR = eyeL.clone();
-  eyeL.position.set(-0.18, 1.87, 0.48);
-  eyeR.position.set(0.18, 1.87, 0.48);
-  root.add(eyeL, eyeR);
+  addFace(root, mats, profile);
 
-  const browL = createBox(0.18, 0.035, 0.035, mats.dark, [-0.19, 2.01, 0.48]);
-  const browR = createBox(0.18, 0.035, 0.035, mats.dark, [0.19, 2.01, 0.48]);
-  browL.rotation.z = 0.22;
-  browR.rotation.z = -0.22;
-  root.add(browL, browR);
-
-  const leftArm = limb(0.12, 0.62, mats.skin);
-  leftArm.position.set(-0.55, 1.1, 0.02);
-  leftArm.rotation.z = 0.35;
-  const rightArm = limb(0.12, 0.62, mats.skin);
-  rightArm.position.set(0.55, 1.1, 0.02);
-  rightArm.rotation.z = -0.35;
+  const leftArm = createArm(-1, mats, profile);
+  const rightArm = createArm(1, mats, profile);
   root.add(leftArm, rightArm);
 
-  const leftLeg = limb(0.13, 0.5, mats.leather);
-  leftLeg.position.set(-0.23, 0.45, 0);
-  const rightLeg = limb(0.13, 0.5, mats.leather);
-  rightLeg.position.set(0.23, 0.45, 0);
+  const leftLeg = createLeg(-1, mats, profile);
+  const rightLeg = createLeg(1, mats, profile);
   root.add(leftLeg, rightLeg);
-
-  const leftFoot = createBox(0.34, 0.15, 0.46, mats.leather, [-0.23, 0.12, 0.12]);
-  const rightFoot = createBox(0.34, 0.15, 0.46, mats.leather, [0.23, 0.12, 0.12]);
-  root.add(leftFoot, rightFoot);
 
   const parts = {
     root,
@@ -423,7 +404,7 @@ function createHeroModel(hero, side) {
     rightLeg
   };
 
-  addCoreModelDetails(root, mats, parts);
+  addCoreModelDetails(root, mats, parts, profile);
   addHeroAccessories(root, hero, mats, parts);
 
   const aura = new THREE.Mesh(
@@ -458,249 +439,663 @@ function createHeroModel(hero, side) {
 function addHeroAccessories(root, hero, mats, parts) {
   switch (hero.shape) {
     case "flame":
-      addHelmet(root, mats.armor, mats.secondary);
-      addShoulders(root, mats.metal, 0.22);
-      addSword(root, mats.metal, mats.secondary, [0.68, 1.14, 0.12], -0.45);
-      addFlames(root, mats.secondary, mats.primary);
+      addSamuraiKit(root, mats, parts);
       break;
     case "tide":
-      parts.body.scale.set(0.98, 1.08, 0.72);
-      addShellPlates(root, mats.metal, mats.secondary);
-      addShield(root, mats.secondary, [-0.68, 1.08, 0.2], 0.52);
-      addShoulders(root, mats.metal, 0.24);
+      addTideKit(root, mats, parts);
       break;
     case "veil":
-      addHood(root, mats.dark, mats.primary);
-      addCape(root, mats.primary);
-      addSword(root, mats.metal, mats.secondary, [0.62, 1.03, 0.18], -0.58);
+      addAssassinKit(root, mats, parts);
       break;
-    case "saint":
-      addHelmet(root, mats.metal, mats.secondary);
-      addShoulders(root, mats.metal, 0.24);
-      addShield(root, mats.primary, [-0.68, 1.12, 0.25], 0.62);
-      addHammer(root, mats.metal, mats.secondary, [0.62, 1.1, 0.08]);
+    case "iron":
+      addIronKit(root, mats, parts);
       break;
     case "storm":
-      addRobePanels(root, mats.primary, mats.secondary);
-      addStaff(root, mats.metal, mats.glow, [0.62, 1.1, 0.12]);
-      addCrown(root, mats.secondary);
+      addStormKit(root, mats, parts);
       break;
     case "thorn":
-      parts.body.scale.set(1.18, 1.08, 0.9);
-      parts.head.position.y = 1.75;
-      addShoulders(root, mats.secondary, 0.26);
-      addHorns(root, mats.secondary);
-      addClaws(root, mats.metal);
+      addThornKit(root, mats, parts);
       break;
     case "prism":
-      addShoulders(root, mats.secondary, 0.16);
-      addBow(root, mats.secondary, [0.66, 1.13, 0.14]);
-      addQuiver(root, mats.dark, mats.secondary);
+      addPrismKit(root, mats, parts);
       break;
     case "void":
-      addHood(root, mats.primary, mats.dark);
-      addCape(root, mats.dark);
-      addRobePanels(root, mats.dark, mats.secondary);
-      addOrb(root, mats.glow, [0.62, 1.24, 0.28]);
+      addVoidKit(root, mats, parts);
       break;
     default:
-      addSword(root, mats.metal, mats.secondary, [0.68, 1.14, 0.12], -0.45);
+      addSword(root, mats.metal, mats.secondary, [0.7, 1.18, 0.18], -0.42);
   }
 }
 
-function addCoreModelDetails(root, mats, parts) {
-  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.2, 10), mats.skin);
-  neck.position.y = 1.48;
-  neck.castShadow = true;
-  root.add(neck);
+function heroModelProfile(shape) {
+  const profiles = {
+    flame: {
+      bodyScale: [0.88, 1.0, 0.7],
+      bodyY: 1.03,
+      headRadius: 0.5,
+      headY: 1.8,
+      headScale: [1.02, 0.92, 0.96],
+      armMat: "skin",
+      legMat: "leather",
+      bootMat: "leather"
+    },
+    tide: {
+      bodyScale: [1.08, 1.03, 0.86],
+      bodyY: 1.0,
+      headRadius: 0.49,
+      headY: 1.75,
+      headScale: [1.05, 0.9, 1.02],
+      armMat: "skin",
+      legMat: "leather",
+      bootMat: "dark"
+    },
+    veil: {
+      bodyScale: [0.78, 1.06, 0.58],
+      bodyY: 1.02,
+      headRadius: 0.48,
+      headY: 1.8,
+      headScale: [0.94, 1.02, 0.9],
+      armMat: "cloth",
+      bodyMaterial: "cloth",
+      legMat: "dark",
+      bootMat: "dark",
+      eyeGlow: true
+    },
+    iron: {
+      bodyScale: [1.08, 1.08, 0.78],
+      bodyY: 1.04,
+      headRadius: 0.5,
+      headY: 1.78,
+      headScale: [1.0, 0.9, 0.95],
+      armMat: "armor",
+      legMat: "armor",
+      bootMat: "metal",
+      faceGuard: true
+    },
+    storm: {
+      bodyScale: [0.78, 1.12, 0.62],
+      bodyY: 1.0,
+      headRadius: 0.49,
+      headY: 1.8,
+      headScale: [0.95, 0.98, 0.92],
+      armMat: "cloth",
+      bodyMaterial: "cloth",
+      legMat: "cloth",
+      bootMat: "dark"
+    },
+    thorn: {
+      bodyScale: [1.28, 1.02, 1.0],
+      bodyY: 1.0,
+      headRadius: 0.52,
+      headY: 1.72,
+      headScale: [1.12, 0.9, 1.04],
+      armMat: "skin",
+      legMat: "leather",
+      bootMat: "wood",
+      browHeavy: true
+    },
+    prism: {
+      bodyScale: [0.82, 1.04, 0.62],
+      bodyY: 1.03,
+      headRadius: 0.49,
+      headY: 1.8,
+      headScale: [1.0, 0.92, 0.95],
+      armMat: "skin",
+      legMat: "leather",
+      bootMat: "dark"
+    },
+    void: {
+      bodyScale: [0.82, 1.12, 0.62],
+      bodyY: 1.0,
+      headRadius: 0.48,
+      headY: 1.8,
+      headScale: [0.94, 1.02, 0.9],
+      armMat: "cloth",
+      bodyMaterial: "cloth",
+      legMat: "dark",
+      bootMat: "dark",
+      eyeGlow: true
+    }
+  };
+  return profiles[shape] || profiles.flame;
+}
 
-  const belt = createBox(0.78, 0.14, 0.68, mats.dark, [0, 0.73, 0.02]);
-  const buckle = createBox(0.16, 0.16, 0.08, mats.secondary, [0, 0.75, 0.38]);
-  root.add(belt, buckle);
+function createArm(side, mats, profile) {
+  const group = new THREE.Group();
+  group.position.set(side * 0.52, 1.28, 0.02);
+  group.rotation.z = side < 0 ? 0.32 : -0.32;
+  const armMat = mats[profile.armMat] || mats.skin;
+  const upper = limb(0.105, 0.34, armMat);
+  upper.position.set(0, -0.18, 0.02);
+  const forearm = limb(0.105, 0.34, armMat);
+  forearm.position.set(side * 0.04, -0.48, 0.08);
+  const gauntlet = createBox(0.18, 0.17, 0.2, mats.armor, [side * 0.04, -0.58, 0.11]);
+  const hand = new THREE.Mesh(new THREE.DodecahedronGeometry(0.13, 0), profile.armMat === "armor" ? mats.metal : mats.skin);
+  hand.position.set(side * 0.05, -0.73, 0.13);
+  hand.castShadow = true;
+  group.add(upper, forearm, gauntlet, hand);
+  group.userData.hand = hand;
+  return group;
+}
 
-  const chestTop = createBox(0.62, 0.12, 0.11, mats.armor, [0, 1.35, 0.42]);
-  const chestLeft = createBox(0.25, 0.33, 0.1, mats.armor, [-0.17, 1.15, 0.45]);
-  const chestRight = createBox(0.25, 0.33, 0.1, mats.armor, [0.17, 1.15, 0.45]);
-  root.add(chestTop, chestLeft, chestRight);
+function createLeg(side, mats, profile) {
+  const group = new THREE.Group();
+  group.position.set(side * 0.22, 0.58, 0);
+  const legMat = mats[profile.legMat] || mats.leather;
+  const bootMat = mats[profile.bootMat] || mats.leather;
+  const thigh = limb(0.12, 0.36, legMat);
+  thigh.position.y = -0.05;
+  const shin = limb(0.115, 0.32, legMat);
+  shin.position.set(0, -0.34, 0.02);
+  const knee = createBox(0.2, 0.13, 0.12, mats.armor, [0, -0.18, 0.16]);
+  const foot = createBox(0.34, 0.15, 0.46, bootMat, [0, -0.62, 0.13]);
+  group.add(thigh, shin, knee, foot);
+  return group;
+}
+
+function addFace(root, mats, profile) {
+  const eyeMat = profile.eyeGlow ? mats.glow : mats.black;
+  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.078, 12, 8), eyeMat);
+  const eyeR = eyeL.clone();
+  eyeL.position.set(-0.18, profile.headY + 0.06, 0.48);
+  eyeR.position.set(0.18, profile.headY + 0.06, 0.48);
+  root.add(eyeL, eyeR);
+
+  const browSize = profile.browHeavy ? 0.24 : 0.18;
+  const browY = profile.headY + 0.2;
+  const browL = createBox(browSize, 0.04, 0.035, mats.dark, [-0.2, browY, 0.49]);
+  const browR = createBox(browSize, 0.04, 0.035, mats.dark, [0.2, browY, 0.49]);
+  browL.rotation.z = 0.18;
+  browR.rotation.z = -0.18;
+  root.add(browL, browR);
 
   const nose = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.16, 6), mats.skin);
-  nose.position.set(0, 1.81, 0.58);
+  nose.position.set(0, profile.headY, 0.58);
   nose.rotation.x = Math.PI / 2;
   nose.castShadow = true;
   root.add(nose);
 
-  const mouth = createBox(0.18, 0.025, 0.02, mats.dark, [0, 1.66, 0.55]);
+  const mouth = createBox(0.18, 0.025, 0.02, mats.dark, [0, profile.headY - 0.16, 0.55]);
   mouth.rotation.x = 0.1;
   root.add(mouth);
 
-  const leftHand = new THREE.Mesh(new THREE.DodecahedronGeometry(0.14, 0), mats.skin);
-  leftHand.position.set(-0.68, 0.76, 0.18);
-  leftHand.castShadow = true;
-  const rightHand = leftHand.clone();
-  rightHand.position.x = 0.68;
-  root.add(leftHand, rightHand);
-
-  const leftGauntlet = createBox(0.19, 0.2, 0.2, mats.armor, [-0.58, 0.86, 0.13]);
-  const rightGauntlet = createBox(0.19, 0.2, 0.2, mats.armor, [0.58, 0.86, 0.13]);
-  root.add(leftGauntlet, rightGauntlet);
-
-  const leftKnee = createBox(0.2, 0.14, 0.12, mats.armor, [-0.23, 0.46, 0.18]);
-  const rightKnee = createBox(0.2, 0.14, 0.12, mats.armor, [0.23, 0.46, 0.18]);
-  root.add(leftKnee, rightKnee);
-
-  parts.leftHand = leftHand;
-  parts.rightHand = rightHand;
+  if (profile.faceGuard) {
+    const guard = createBox(0.42, 0.15, 0.08, mats.metal, [0, profile.headY - 0.08, 0.52]);
+    guard.rotation.x = 0.08;
+    root.add(guard);
+  }
 }
 
-function addSword(root, bladeMat, hiltMat, pos, zRot) {
-  const blade = createBox(0.09, 0.86, 0.055, bladeMat, pos);
+function addCoreModelDetails(root, mats, parts, profile) {
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.2, 10), mats.skin);
+  neck.position.y = 1.46;
+  neck.castShadow = true;
+  root.add(neck);
+
+  const belly = new THREE.Mesh(new THREE.DodecahedronGeometry(0.3, 0), mats.secondary);
+  belly.position.set(0, 1.04, 0.39);
+  belly.scale.set(1.12, 0.72, 0.28);
+  belly.castShadow = true;
+  root.add(belly);
+
+  const belt = createBox(0.78, 0.13, 0.68, mats.dark, [0, 0.72, 0.02]);
+  const buckle = createBox(0.16, 0.15, 0.08, mats.secondary, [0, 0.74, 0.38]);
+  root.add(belt, buckle);
+
+  const chestTop = createBox(0.62, 0.12, 0.11, mats.armor, [0, 1.34, 0.42]);
+  const chestLeft = createBox(0.24, 0.32, 0.1, mats.armor, [-0.17, 1.14, 0.45]);
+  const chestRight = createBox(0.24, 0.32, 0.1, mats.armor, [0.17, 1.14, 0.45]);
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.035, 8, 30, Math.PI), mats.secondary);
+  collar.position.set(0, 1.43, 0.23);
+  collar.rotation.set(Math.PI / 2, 0, Math.PI);
+  root.add(chestTop, chestLeft, chestRight, collar);
+
+  parts.leftHand = parts.leftArm.userData.hand;
+  parts.rightHand = parts.rightArm.userData.hand;
+  parts.profile = profile;
+}
+
+function addSamuraiKit(root, mats) {
+  addPlateHelmet(root, mats.armor, mats.gold, mats.secondary);
+  addShoulders(root, mats.metal, 0.24, "angular");
+  addArmorSkirt(root, mats.dark, mats.secondary);
+  addSword(root, mats.metal, mats.gold, [0.72, 1.12, 0.18], -0.45, 1.02);
+  addSword(root, mats.metal, mats.secondary, [-0.72, 1.05, 0.06], 0.54, 0.82);
+  addBackBanner(root, mats.dark, mats.secondary);
+  addFlames(root, mats.secondary, mats.primary);
+}
+
+function addTideKit(root, mats) {
+  addShellBack(root, mats.stone, mats.secondary);
+  addShellPlates(root, mats.metal, mats.secondary);
+  addShoulders(root, mats.stone, 0.27, "round");
+  addRoundShield(root, mats.secondary, mats.metal, [-0.75, 1.08, 0.22], 0.54);
+  addAnchor(root, mats.metal, mats.wood, [0.72, 1.08, 0.08]);
+  addFinCrests(root, mats.secondary);
+}
+
+function addAssassinKit(root, mats) {
+  addHood(root, mats.dark, mats.primary, 0.6);
+  addCape(root, mats.primary, 0.78, 1.35);
+  addScarf(root, mats.secondary);
+  addDagger(root, mats.metal, mats.secondary, [0.68, 0.9, 0.24], -0.86);
+  addDagger(root, mats.metal, mats.secondary, [-0.66, 0.9, 0.22], 0.86);
+  addBeltPouches(root, mats.leather);
+}
+
+function addIronKit(root, mats) {
+  addPlateHelmet(root, mats.metal, mats.gold, mats.bone, true);
+  addShoulders(root, mats.metal, 0.31, "angular");
+  addArmorSkirt(root, mats.armor, mats.gold);
+  addTowerShield(root, mats.primary, mats.gold, [-0.78, 1.02, 0.25]);
+  addHammer(root, mats.metal, mats.gold, [0.72, 1.12, 0.1], 1.08);
+  addBackPlate(root, mats.metal);
+}
+
+function addStormKit(root, mats) {
+  addRobePanels(root, mats.primary, mats.secondary, 0.82);
+  addCape(root, mats.primary, 0.68, 1.18);
+  addStaff(root, mats.wood, mats.glow, [0.72, 1.08, 0.14], 1.48);
+  addCrown(root, mats.secondary);
+  addFloatingRunes(root, mats.glow);
+}
+
+function addThornKit(root, mats) {
+  addShoulders(root, mats.secondary, 0.31, "spiked");
+  addHorns(root, mats.bone, 0.46, 0.48);
+  addClaws(root, mats.bone, 0.26);
+  addBackSpikes(root, mats.secondary, 5);
+  addLeafPlates(root, mats.primary, mats.wood);
+  addTusks(root, mats.bone);
+}
+
+function addPrismKit(root, mats) {
+  addShoulders(root, mats.secondary, 0.19, "crystal");
+  addBow(root, mats.secondary, [0.72, 1.08, 0.14], 0.52);
+  addQuiver(root, mats.dark, mats.secondary);
+  addCrystalFan(root, mats.glow, mats.secondary);
+  addVisor(root, mats.secondary);
+}
+
+function addVoidKit(root, mats) {
+  addHood(root, mats.primary, mats.dark, 0.63);
+  addCape(root, mats.dark, 0.86, 1.42);
+  addRobePanels(root, mats.dark, mats.secondary, 0.88);
+  addOrb(root, mats.glow, [0.68, 1.22, 0.28], 0.22);
+  addVoidRing(root, mats.glow);
+  addPotionVials(root, mats.secondary, mats.glow);
+}
+
+function addSword(root, bladeMat, hiltMat, pos, zRot, length = 0.9) {
+  const blade = createBox(0.08, length, 0.045, bladeMat, pos);
   blade.rotation.z = zRot;
-  const hilt = createBox(0.33, 0.07, 0.08, hiltMat, [pos[0] - 0.11, pos[1] - 0.34, pos[2]]);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 4), bladeMat);
+  tip.position.set(pos[0] + Math.sin(-zRot) * length * 0.46, pos[1] + Math.cos(zRot) * length * 0.46, pos[2]);
+  tip.rotation.z = zRot;
+  tip.castShadow = true;
+  const hilt = createBox(0.3, 0.065, 0.075, hiltMat, [pos[0] - Math.cos(zRot) * 0.1, pos[1] - Math.sin(zRot) * 0.1 - length * 0.38, pos[2]]);
+  hilt.rotation.z = zRot;
+  root.add(blade, tip, hilt);
+}
+
+function addDagger(root, bladeMat, hiltMat, pos, zRot) {
+  const blade = createBox(0.07, 0.44, 0.045, bladeMat, pos);
+  blade.rotation.z = zRot;
+  const hilt = createBox(0.2, 0.055, 0.07, hiltMat, [pos[0], pos[1] - 0.22, pos[2]]);
   hilt.rotation.z = zRot;
   root.add(blade, hilt);
 }
 
-function addHammer(root, headMat, handleMat, pos) {
-  const handle = createBox(0.08, 0.82, 0.08, handleMat, pos);
-  handle.rotation.z = -0.3;
-  const head = createBox(0.42, 0.23, 0.24, headMat, [pos[0] + 0.1, pos[1] + 0.38, pos[2]]);
-  head.rotation.z = -0.3;
-  root.add(handle, head);
+function addHammer(root, headMat, handleMat, pos, length = 0.9) {
+  const handle = createBox(0.075, length, 0.075, handleMat, pos);
+  handle.rotation.z = -0.26;
+  const head = createBox(0.48, 0.25, 0.27, headMat, [pos[0] + 0.1, pos[1] + length * 0.42, pos[2]]);
+  head.rotation.z = -0.26;
+  const capL = createBox(0.11, 0.31, 0.31, handleMat, [pos[0] - 0.18, pos[1] + length * 0.42, pos[2]]);
+  const capR = createBox(0.11, 0.31, 0.31, handleMat, [pos[0] + 0.38, pos[1] + length * 0.42, pos[2]]);
+  capL.rotation.z = capR.rotation.z = -0.26;
+  root.add(handle, head, capL, capR);
 }
 
-function addShield(root, mat, pos, radius) {
-  const shield = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.12, 28), mat);
+function addRoundShield(root, faceMat, rimMat, pos, radius) {
+  const shield = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, 0.13, 34), faceMat);
   shield.position.set(pos[0], pos[1], pos[2]);
   shield.rotation.set(Math.PI / 2, 0.16, 0.08);
   shield.castShadow = true;
-  root.add(shield);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(radius * 0.96, 0.035, 8, 34), rimMat);
+  rim.position.copy(shield.position);
+  rim.rotation.copy(shield.rotation);
+  const boss = new THREE.Mesh(new THREE.SphereGeometry(radius * 0.2, 14, 10), rimMat);
+  boss.position.set(pos[0], pos[1], pos[2] + 0.08);
+  boss.scale.set(1, 1, 0.5);
+  boss.castShadow = true;
+  root.add(shield, rim, boss);
 }
 
-function addStaff(root, staffMat, orbMat, pos) {
-  const staff = createBox(0.07, 1.28, 0.07, staffMat, pos);
+function addTowerShield(root, faceMat, rimMat, pos) {
+  const shield = createBox(0.62, 0.92, 0.13, faceMat, pos);
+  shield.rotation.set(0.08, 0.12, 0.08);
+  const rimTop = createBox(0.68, 0.08, 0.15, rimMat, [pos[0], pos[1] + 0.43, pos[2] + 0.01]);
+  const rimBot = createBox(0.58, 0.08, 0.15, rimMat, [pos[0], pos[1] - 0.43, pos[2] + 0.01]);
+  const stripe = createBox(0.12, 0.72, 0.16, rimMat, [pos[0], pos[1], pos[2] + 0.02]);
+  [rimTop, rimBot, stripe].forEach((item) => item.rotation.copy(shield.rotation));
+  root.add(rimTop, rimBot, stripe);
+}
+
+function addStaff(root, staffMat, orbMat, pos, length = 1.28) {
+  const staff = createBox(0.065, length, 0.065, staffMat, pos);
   staff.rotation.z = -0.12;
   const orb = new THREE.Mesh(new THREE.SphereGeometry(0.18, 18, 12), orbMat);
-  orb.position.set(pos[0] + 0.08, pos[1] + 0.72, pos[2]);
-  root.add(staff, orb);
+  orb.position.set(pos[0] + 0.08, pos[1] + length * 0.54, pos[2]);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.018, 8, 28), orbMat);
+  ring.position.copy(orb.position);
+  ring.rotation.y = Math.PI / 2;
+  root.add(staff, orb, ring);
 }
 
-function addBow(root, mat, pos) {
-  const bow = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.025, 8, 36, Math.PI * 1.3), mat);
+function addBow(root, mat, pos, radius = 0.48) {
+  const bow = new THREE.Mesh(new THREE.TorusGeometry(radius, 0.025, 8, 42, Math.PI * 1.34), mat);
   bow.position.set(pos[0], pos[1], pos[2]);
-  bow.rotation.set(0.1, 0.1, Math.PI / 2);
-  const string = createBox(0.025, 0.72, 0.025, material("#f5f0e8"), [pos[0] + 0.05, pos[1], pos[2]]);
-  root.add(bow, string);
+  bow.rotation.set(0.12, 0.12, Math.PI / 2);
+  const string = createBox(0.022, radius * 1.62, 0.022, material("#f5f0e8"), [pos[0] + 0.07, pos[1], pos[2]]);
+  const arrow = createBox(0.035, radius * 1.1, 0.035, material("#f5f0e8"), [pos[0] - 0.04, pos[1] + 0.04, pos[2] + 0.04]);
+  arrow.rotation.z = -0.32;
+  root.add(bow, string, arrow);
 }
 
 function addQuiver(root, mat, arrowMat) {
-  const quiver = createBox(0.22, 0.62, 0.2, mat, [-0.38, 1.2, -0.36]);
+  const quiver = createBox(0.24, 0.68, 0.22, mat, [-0.4, 1.22, -0.38]);
   quiver.rotation.z = -0.42;
   root.add(quiver);
-  for (let i = 0; i < 3; i += 1) {
-    const arrow = createBox(0.035, 0.55, 0.035, arrowMat, [-0.43 + i * 0.05, 1.58, -0.44]);
+  for (let i = 0; i < 5; i += 1) {
+    const arrow = createBox(0.032, 0.56, 0.032, arrowMat, [-0.48 + i * 0.045, 1.6, -0.45]);
     arrow.rotation.z = -0.42;
-    root.add(arrow);
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 6), arrowMat);
+    tip.position.set(-0.48 + i * 0.045, 1.91, -0.45);
+    tip.rotation.z = -0.42;
+    root.add(arrow, tip);
+  }
+}
+
+function addPlateHelmet(root, metalMat, trimMat, hornMat, horned = false) {
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(0.48, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.56), metalMat);
+  cap.position.set(0, 2.02, 0);
+  cap.scale.set(1.05, 0.62, 0.96);
+  cap.castShadow = true;
+  const band = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.046, 8, 32), trimMat);
+  band.position.set(0, 1.98, 0.02);
+  band.rotation.x = Math.PI / 2;
+  const noseGuard = createBox(0.08, 0.25, 0.08, trimMat, [0, 1.82, 0.5]);
+  root.add(cap, band, noseGuard);
+  if (horned) addHorns(root, hornMat, 0.42, 0.38);
+}
+
+function addHood(root, hoodMat, trimMat, size = 0.58) {
+  const hood = new THREE.Mesh(new THREE.ConeGeometry(size, 0.62, 24, 1, true), hoodMat);
+  hood.position.set(0, 2.04, 0);
+  hood.rotation.x = -0.04;
+  hood.castShadow = true;
+  root.add(hood);
+  const trim = new THREE.Mesh(new THREE.TorusGeometry(size * 0.74, 0.035, 8, 30), trimMat);
+  trim.position.set(0, 1.77, 0.08);
+  trim.rotation.x = Math.PI / 2;
+  root.add(trim);
+}
+
+function addCape(root, mat, width = 0.84, height = 1.18) {
+  const cape = createBox(width, height, 0.08, mat, [0, 1.08, -0.48]);
+  cape.rotation.x = -0.18;
+  root.add(cape);
+}
+
+function addShoulders(root, mat, size, type = "round") {
+  const make = (x) => {
+    const shoulder = type === "angular"
+      ? new THREE.Mesh(new THREE.DodecahedronGeometry(size, 0), mat)
+      : new THREE.Mesh(new THREE.SphereGeometry(size, 14, 10), mat);
+    shoulder.position.set(x, 1.42, 0.02);
+    shoulder.scale.set(type === "spiked" ? 1.55 : 1.42, 0.76, 1.05);
+    shoulder.castShadow = true;
+    root.add(shoulder);
+    if (type === "spiked") {
+      const spike = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.24, 7), mat);
+      spike.position.set(x + Math.sign(x) * 0.1, 1.58, 0.08);
+      spike.rotation.z = -Math.sign(x) * 0.56;
+      spike.castShadow = true;
+      root.add(spike);
+    }
+    if (type === "crystal") {
+      const crystal = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.32, 5), mat);
+      crystal.position.set(x, 1.66, 0.02);
+      crystal.rotation.z = -Math.sign(x) * 0.4;
+      crystal.castShadow = true;
+      root.add(crystal);
+    }
+  };
+  make(-0.5);
+  make(0.5);
+}
+
+function addArmorSkirt(root, plateMat, trimMat) {
+  for (let i = 0; i < 5; i += 1) {
+    const x = -0.36 + i * 0.18;
+    const plate = createBox(0.14, 0.36, 0.08, i % 2 ? plateMat : trimMat, [x, 0.55, 0.35]);
+    plate.rotation.z = (i - 2) * 0.04;
+    plate.rotation.x = 0.1;
+    root.add(plate);
+  }
+}
+
+function addShellBack(root, shellMat, trimMat) {
+  const shell = new THREE.Mesh(new THREE.SphereGeometry(0.64, 20, 12), shellMat);
+  shell.position.set(0, 1.12, -0.43);
+  shell.scale.set(1.08, 0.86, 0.38);
+  shell.rotation.x = -0.08;
+  shell.castShadow = true;
+  root.add(shell);
+  for (let i = 0; i < 3; i += 1) {
+    const band = new THREE.Mesh(new THREE.TorusGeometry(0.28 + i * 0.12, 0.018, 6, 34), trimMat);
+    band.position.set(0, 1.18 - i * 0.08, -0.18);
+    band.scale.set(1.2, 0.55, 0.2);
+    band.rotation.x = Math.PI / 2.4;
+    root.add(band);
   }
 }
 
 function addShellPlates(root, plateMat, trimMat) {
   for (let i = 0; i < 4; i += 1) {
-    const plate = createBox(0.42, 0.16, 0.12, i % 2 ? plateMat : trimMat, [-0.27 + i * 0.18, 1.26 - i * 0.13, -0.46]);
+    const plate = createBox(0.42, 0.15, 0.1, i % 2 ? plateMat : trimMat, [-0.27 + i * 0.18, 1.25 - i * 0.13, -0.48]);
     plate.rotation.x = -0.24;
     plate.rotation.z = -0.18 + i * 0.12;
     root.add(plate);
   }
 }
 
-function addRobePanels(root, clothMat, trimMat) {
-  const center = createBox(0.34, 0.78, 0.08, clothMat, [0, 0.62, 0.43]);
+function addRobePanels(root, clothMat, trimMat, height = 0.78) {
+  const center = createBox(0.34, height, 0.08, clothMat, [0, 0.62, 0.43]);
   center.rotation.x = 0.1;
-  const left = createBox(0.22, 0.7, 0.07, clothMat, [-0.26, 0.6, 0.37]);
+  const left = createBox(0.22, height * 0.9, 0.07, clothMat, [-0.26, 0.6, 0.37]);
   left.rotation.z = -0.14;
-  const right = createBox(0.22, 0.7, 0.07, clothMat, [0.26, 0.6, 0.37]);
+  const right = createBox(0.22, height * 0.9, 0.07, clothMat, [0.26, 0.6, 0.37]);
   right.rotation.z = 0.14;
   const trim = createBox(0.42, 0.07, 0.08, trimMat, [0, 0.98, 0.47]);
   root.add(center, left, right, trim);
 }
 
-function addOrb(root, mat, pos) {
-  const orb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 20, 14), mat);
+function addOrb(root, mat, pos, radius = 0.2) {
+  const orb = new THREE.Mesh(new THREE.SphereGeometry(radius, 20, 14), mat);
   orb.position.set(pos[0], pos[1], pos[2]);
+  orb.castShadow = true;
   root.add(orb);
 }
 
 function addFlames(root, flameMat, baseMat) {
-  for (let i = 0; i < 3; i += 1) {
-    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.12 - i * 0.015, 0.38, 8), i % 2 ? baseMat : flameMat);
-    flame.position.set(-0.14 + i * 0.14, 2.38 + i * 0.04, 0.04);
-    flame.rotation.z = -0.2 + i * 0.2;
+  for (let i = 0; i < 5; i += 1) {
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.1 - Math.min(i, 2) * 0.01, 0.32 + i * 0.025, 8), i % 2 ? baseMat : flameMat);
+    flame.position.set(-0.24 + i * 0.12, 2.32 + Math.sin(i) * 0.035, 0.04);
+    flame.rotation.z = -0.35 + i * 0.17;
     flame.castShadow = true;
     root.add(flame);
   }
 }
 
-function addHood(root, hoodMat, trimMat) {
-  const hood = new THREE.Mesh(new THREE.ConeGeometry(0.58, 0.56, 24, 1, true), hoodMat);
-  hood.position.set(0, 2.03, 0);
-  hood.rotation.x = -0.04;
-  hood.castShadow = true;
-  root.add(hood);
-  const trim = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.035, 8, 30), trimMat);
-  trim.position.set(0, 1.77, 0.08);
-  trim.rotation.x = Math.PI / 2;
-  root.add(trim);
-}
-
-function addCape(root, mat) {
-  const cape = createBox(0.84, 1.18, 0.08, mat, [0, 1.05, -0.48]);
-  cape.rotation.x = -0.18;
-  root.add(cape);
-}
-
-function addHelmet(root, metalMat, hornMat) {
-  const band = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.055, 8, 28), metalMat);
-  band.position.set(0, 2.02, 0.01);
-  band.rotation.x = Math.PI / 2;
-  root.add(band);
-  addHorns(root, hornMat);
-}
-
-function addHorns(root, mat) {
-  const left = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.38, 10), mat);
-  left.position.set(-0.4, 2.14, 0.02);
+function addHorns(root, mat, spread = 0.4, length = 0.38) {
+  const left = new THREE.Mesh(new THREE.ConeGeometry(0.085, length, 10), mat);
+  left.position.set(-spread, 2.1, 0.02);
   left.rotation.z = 0.78;
   const right = left.clone();
-  right.position.x = 0.4;
+  right.position.x = spread;
   right.rotation.z = -0.78;
   root.add(left, right);
 }
 
 function addCrown(root, mat) {
+  const band = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.025, 8, 30), mat);
+  band.position.set(0, 2.04, 0.02);
+  band.rotation.x = Math.PI / 2;
+  root.add(band);
   for (let i = 0; i < 5; i += 1) {
-    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.28, 8), mat);
-    spike.position.set(-0.28 + i * 0.14, 2.27 + Math.abs(i - 2) * -0.02, 0.02);
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.052, 0.26, 8), mat);
+    spike.position.set(-0.28 + i * 0.14, 2.24 - Math.abs(i - 2) * 0.02, 0.02);
+    spike.castShadow = true;
     root.add(spike);
   }
 }
 
-function addShoulders(root, mat, size) {
-  const left = new THREE.Mesh(new THREE.SphereGeometry(size, 14, 10), mat);
-  left.position.set(-0.48, 1.45, 0.02);
-  left.scale.set(1.45, 0.8, 1);
-  const right = left.clone();
-  right.position.x = 0.48;
-  root.add(left, right);
-}
-
-function addClaws(root, mat) {
+function addClaws(root, mat, length = 0.22) {
   [-0.72, 0.72].forEach((x, armIndex) => {
     for (let i = 0; i < 3; i += 1) {
-      const claw = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.22, 7), mat);
+      const claw = new THREE.Mesh(new THREE.ConeGeometry(0.035, length, 7), mat);
       claw.position.set(x + (armIndex ? i * 0.035 : -i * 0.035), 0.72, 0.34);
       claw.rotation.x = Math.PI / 2;
       root.add(claw);
     }
   });
+}
+
+function addAnchor(root, metalMat, handleMat, pos) {
+  const shaft = createBox(0.07, 0.9, 0.07, handleMat, pos);
+  shaft.rotation.z = -0.18;
+  const cross = createBox(0.48, 0.08, 0.08, metalMat, [pos[0] + 0.02, pos[1] - 0.36, pos[2]]);
+  cross.rotation.z = -0.18;
+  const hookL = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.025, 8, 26, Math.PI * 0.74), metalMat);
+  hookL.position.set(pos[0] - 0.14, pos[1] - 0.46, pos[2]);
+  hookL.rotation.set(0, 0, 1.2);
+  const hookR = hookL.clone();
+  hookR.position.x = pos[0] + 0.18;
+  hookR.rotation.z = -1.2;
+  root.add(shaft, cross, hookL, hookR);
+}
+
+function addFinCrests(root, mat) {
+  [-0.48, 0.48].forEach((x) => {
+    const fin = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.34, 3), mat);
+    fin.position.set(x, 1.72, -0.05);
+    fin.rotation.set(0.2, 0, x < 0 ? 0.7 : -0.7);
+    fin.scale.set(0.65, 1, 1.4);
+    fin.castShadow = true;
+    root.add(fin);
+  });
+}
+
+function addScarf(root, mat) {
+  const wrap = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.05, 8, 30), mat);
+  wrap.position.set(0, 1.55, 0.08);
+  wrap.rotation.x = Math.PI / 2;
+  const tail = createBox(0.14, 0.58, 0.06, mat, [-0.38, 1.22, -0.12]);
+  tail.rotation.z = -0.36;
+  root.add(wrap, tail);
+}
+
+function addBeltPouches(root, mat) {
+  [-0.36, 0.36].forEach((x) => {
+    const pouch = createBox(0.16, 0.18, 0.1, mat, [x, 0.74, 0.4]);
+    pouch.rotation.z = x < 0 ? 0.12 : -0.12;
+    root.add(pouch);
+  });
+}
+
+function addBackPlate(root, mat) {
+  const plate = createBox(0.82, 0.78, 0.1, mat, [0, 1.16, -0.48]);
+  plate.rotation.x = -0.08;
+  root.add(plate);
+}
+
+function addFloatingRunes(root, mat) {
+  for (let i = 0; i < 4; i += 1) {
+    const rune = createBox(0.08, 0.2, 0.02, mat, [-0.6 + i * 0.4, 1.42 + (i % 2) * 0.3, 0.48]);
+    rune.rotation.z = 0.4 + i * 0.35;
+    root.add(rune);
+  }
+}
+
+function addBackSpikes(root, mat, count) {
+  for (let i = 0; i < count; i += 1) {
+    const spike = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.28, 8), mat);
+    spike.position.set(-0.32 + i * 0.16, 1.2 + Math.sin(i) * 0.2, -0.58);
+    spike.rotation.x = -Math.PI / 2.9;
+    spike.castShadow = true;
+    root.add(spike);
+  }
+}
+
+function addLeafPlates(root, leafMat, woodMat) {
+  for (let i = 0; i < 4; i += 1) {
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.34, 5), i % 2 ? leafMat : woodMat);
+    leaf.position.set(-0.3 + i * 0.2, 1.04 - i * 0.07, 0.48);
+    leaf.rotation.set(Math.PI / 2.2, 0, -0.4 + i * 0.22);
+    leaf.castShadow = true;
+    root.add(leaf);
+  }
+}
+
+function addTusks(root, mat) {
+  [-0.22, 0.22].forEach((x) => {
+    const tusk = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.22, 8), mat);
+    tusk.position.set(x, 1.63, 0.56);
+    tusk.rotation.set(Math.PI / 2.2, 0, x < 0 ? -0.2 : 0.2);
+    root.add(tusk);
+  });
+}
+
+function addCrystalFan(root, glowMat, crystalMat) {
+  for (let i = 0; i < 5; i += 1) {
+    const shard = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.44, 5), i % 2 ? glowMat : crystalMat);
+    shard.position.set(-0.34 + i * 0.17, 1.46 + Math.abs(i - 2) * 0.08, -0.48);
+    shard.rotation.set(-0.62, 0, -0.6 + i * 0.3);
+    shard.castShadow = true;
+    root.add(shard);
+  }
+}
+
+function addVisor(root, mat) {
+  const visor = createBox(0.48, 0.09, 0.05, mat, [0, 1.88, 0.52]);
+  visor.rotation.x = 0.08;
+  root.add(visor);
+}
+
+function addVoidRing(root, mat) {
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.022, 8, 42), mat);
+  ring.position.set(0, 1.28, -0.52);
+  ring.rotation.set(0.2, 0.3, 0.1);
+  root.add(ring);
+}
+
+function addPotionVials(root, liquidMat, glassMat) {
+  [-0.32, 0.32].forEach((x, index) => {
+    const vial = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.07, 0.24, 10), glassMat);
+    vial.position.set(x, 0.83, 0.45);
+    vial.rotation.z = index ? -0.2 : 0.2;
+    const cap = createBox(0.09, 0.035, 0.08, liquidMat, [x, 0.97, 0.45]);
+    root.add(vial, cap);
+  });
+}
+
+function addBackBanner(root, poleMat, clothMat) {
+  const pole = createBox(0.045, 0.8, 0.045, poleMat, [-0.42, 1.68, -0.42]);
+  const banner = createBox(0.2, 0.34, 0.035, clothMat, [-0.32, 1.86, -0.42]);
+  banner.rotation.z = -0.12;
+  root.add(pole, banner);
 }
 
 function limb(radius, length, mat) {
@@ -746,7 +1141,7 @@ function heroSkinColor(hero) {
     flame: "#d99b63",
     tide: "#83b7ad",
     veil: "#9ba9c9",
-    saint: "#e3b07a",
+    iron: "#e3b07a",
     storm: "#d8d3c4",
     thorn: "#84a165",
     prism: "#d8a06f",
