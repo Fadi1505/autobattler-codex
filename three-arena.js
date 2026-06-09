@@ -1,5 +1,5 @@
-const THREE_URL = "three";
-const GLTF_LOADER_URL = "three/addons/loaders/GLTFLoader.js";
+const THREE_URL = "https://unpkg.com/three@0.160.0/build/three.module.js";
+const GLTF_LOADER_URL = "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
 
 let THREE;
 let GLTFLoader;
@@ -11,6 +11,7 @@ let clock;
 let container;
 let resizeObserver;
 let arenaReady = false;
+let arenaFailed = false;
 
 const units = {
   left: null,
@@ -49,7 +50,8 @@ async function boot() {
       gltfLoader = null;
     }
   } catch (error) {
-    console.warn("3D arena could not load. Falling back to 2D portraits.", error);
+    console.warn("3D arena could not load.", error);
+    markArenaFailed();
     return;
   }
 
@@ -218,6 +220,10 @@ function setHeroes(heroes) {
 }
 
 function hydrateViewers(root = document) {
+  if (arenaFailed) {
+    markArenaFailed(root);
+    return;
+  }
   if (!arenaReady) {
     window.__arena3DNeedsHydrate = true;
     return;
@@ -239,6 +245,14 @@ function hydrateViewers(root = document) {
   });
 
   window.__arena3DNeedsHydrate = false;
+}
+
+function markArenaFailed(root = document) {
+  arenaFailed = true;
+  document.body.classList.add("arena-3d-failed");
+  root.querySelectorAll(".model-loading").forEach((label) => {
+    label.textContent = "Use local server for 3D";
+  });
 }
 
 function getViewerHero(element) {
