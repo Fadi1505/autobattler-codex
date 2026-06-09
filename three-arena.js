@@ -379,6 +379,7 @@ function createHeroModel(hero, side) {
     black: material("#071014", 0.72, 0)
   };
   const profile = heroModelProfile(hero.shape);
+  const coreMeshes = [];
 
   const root = new THREE.Group();
   root.rotation.y = side === "left" ? -0.34 : 0.34;
@@ -390,6 +391,7 @@ function createHeroModel(hero, side) {
   body.castShadow = true;
   body.receiveShadow = true;
   root.add(body);
+  coreMeshes.push(body);
 
   const head = new THREE.Mesh(new THREE.DodecahedronGeometry(profile.headRadius, 1), mats.skin);
   head.position.set(0, profile.headY, profile.headZ || 0);
@@ -397,16 +399,19 @@ function createHeroModel(hero, side) {
   head.castShadow = true;
   head.receiveShadow = true;
   root.add(head);
+  coreMeshes.push(head);
 
-  addFace(root, mats, profile);
+  addFace(root, mats, profile, coreMeshes);
 
   const leftArm = createArm(-1, mats, profile);
   const rightArm = createArm(1, mats, profile);
   root.add(leftArm, rightArm);
+  coreMeshes.push(leftArm, rightArm);
 
   const leftLeg = createLeg(-1, mats, profile);
   const rightLeg = createLeg(1, mats, profile);
   root.add(leftLeg, rightLeg);
+  coreMeshes.push(leftLeg, rightLeg);
 
   const parts = {
     root,
@@ -415,10 +420,11 @@ function createHeroModel(hero, side) {
     leftArm,
     rightArm,
     leftLeg,
-    rightLeg
+    rightLeg,
+    coreMeshes
   };
 
-  addCoreModelDetails(root, mats, parts, profile);
+  addCoreModelDetails(root, mats, parts, profile, coreMeshes);
   addHeroAccessories(root, hero, mats, parts);
 
   const aura = new THREE.Mesh(
@@ -446,6 +452,7 @@ function createHeroModel(hero, side) {
     side,
     group,
     parts,
+    mats,
     payload: null
   };
 }
@@ -607,13 +614,14 @@ function createLeg(side, mats, profile) {
   return group;
 }
 
-function addFace(root, mats, profile) {
+function addFace(root, mats, profile, coreMeshes = []) {
   const eyeMat = profile.eyeGlow ? mats.glow : mats.black;
   const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.078, 12, 8), eyeMat);
   const eyeR = eyeL.clone();
   eyeL.position.set(-0.18, profile.headY + 0.06, 0.48);
   eyeR.position.set(0.18, profile.headY + 0.06, 0.48);
   root.add(eyeL, eyeR);
+  coreMeshes.push(eyeL, eyeR);
 
   const browSize = profile.browHeavy ? 0.24 : 0.18;
   const browY = profile.headY + 0.2;
@@ -622,39 +630,46 @@ function addFace(root, mats, profile) {
   browL.rotation.z = 0.18;
   browR.rotation.z = -0.18;
   root.add(browL, browR);
+  coreMeshes.push(browL, browR);
 
   const nose = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.16, 6), mats.skin);
   nose.position.set(0, profile.headY, 0.58);
   nose.rotation.x = Math.PI / 2;
   nose.castShadow = true;
   root.add(nose);
+  coreMeshes.push(nose);
 
   const mouth = createBox(0.18, 0.025, 0.02, mats.dark, [0, profile.headY - 0.16, 0.55]);
   mouth.rotation.x = 0.1;
   root.add(mouth);
+  coreMeshes.push(mouth);
 
   if (profile.faceGuard) {
     const guard = createBox(0.42, 0.15, 0.08, mats.metal, [0, profile.headY - 0.08, 0.52]);
     guard.rotation.x = 0.08;
     root.add(guard);
+    coreMeshes.push(guard);
   }
 }
 
-function addCoreModelDetails(root, mats, parts, profile) {
+function addCoreModelDetails(root, mats, parts, profile, coreMeshes = []) {
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, 0.2, 10), mats.skin);
   neck.position.y = 1.46;
   neck.castShadow = true;
   root.add(neck);
+  coreMeshes.push(neck);
 
   const belly = new THREE.Mesh(new THREE.DodecahedronGeometry(0.3, 0), mats.secondary);
   belly.position.set(0, 1.04, 0.39);
   belly.scale.set(1.12, 0.72, 0.28);
   belly.castShadow = true;
   root.add(belly);
+  coreMeshes.push(belly);
 
   const belt = createBox(0.78, 0.13, 0.68, mats.dark, [0, 0.72, 0.02]);
   const buckle = createBox(0.16, 0.15, 0.08, mats.secondary, [0, 0.74, 0.38]);
   root.add(belt, buckle);
+  coreMeshes.push(belt, buckle);
 
   const chestTop = createBox(0.62, 0.12, 0.11, mats.armor, [0, 1.34, 0.42]);
   const chestLeft = createBox(0.24, 0.32, 0.1, mats.armor, [-0.17, 1.14, 0.45]);
@@ -663,6 +678,7 @@ function addCoreModelDetails(root, mats, parts, profile) {
   collar.position.set(0, 1.43, 0.23);
   collar.rotation.set(Math.PI / 2, 0, Math.PI);
   root.add(chestTop, chestLeft, chestRight, collar);
+  coreMeshes.push(chestTop, chestLeft, chestRight, collar);
 
   parts.leftHand = parts.leftArm.userData.hand;
   parts.rightHand = parts.rightArm.userData.hand;
@@ -1166,29 +1182,59 @@ function heroSkinColor(hero) {
 
 async function loadExternalHeroModel(model, hero) {
   if (!gltfLoader || !model || !hero?.id) return;
-  const url = `assets/models/${hero.id}.glb`;
-  try {
-    const response = await fetch(url, { method: "HEAD" });
-    if (!response.ok) return;
-    const gltf = await gltfLoader.loadAsync(url);
-    if (!model.group || model.heroId !== hero.id) return;
-    const assetRoot = gltf.scene;
-    prepareExternalModel(assetRoot);
-    model.parts.root.visible = false;
-    model.group.add(assetRoot);
-    model.parts.assetRoot = assetRoot;
-  } catch {
-    // Missing model files intentionally fall back to the procedural rig.
+  const candidates = heroModelCandidates(hero);
+  for (const candidate of candidates) {
+    try {
+      if (!(await canLoadAsset(candidate.url))) continue;
+      const gltf = await gltfLoader.loadAsync(candidate.url);
+      if (!model.group || model.heroId !== hero.id) return;
+      const assetRoot = gltf.scene;
+      const assetContainer = new THREE.Group();
+      prepareExternalModel(assetRoot, candidate.height || 2.55);
+      assetContainer.add(assetRoot);
+      model.parts.root.visible = false;
+      model.group.add(assetContainer);
+      model.parts.assetRoot = assetContainer;
+      model.parts.externalScene = assetRoot;
+      return;
+    } catch {
+      // Missing or blocked model files intentionally fall back to the next candidate.
+    }
   }
 }
 
-function prepareExternalModel(assetRoot) {
+async function canLoadAsset(url) {
+  if (window.location.protocol === "file:") return false;
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+function heroModelCandidates(hero) {
+  const modelMap = {
+    "ember-ronin": "rogue",
+    "tide-warden": "knight",
+    "night-veil": "rogue-hooded",
+    "iron-saint": "knight",
+    "storm-oracle": "mage",
+    "thorn-beast": "barbarian",
+    "prism-archer": "rogue",
+    "void-alchemist": "mage"
+  };
+  const assetName = modelMap[hero.id] || "knight";
+  return [{ url: `assets/models/kaykit-adventurer-${assetName}.glb`, mode: "full", height: 2.16 }];
+}
+
+function prepareExternalModel(assetRoot, targetHeight = 2.35) {
   const box = new THREE.Box3().setFromObject(assetRoot);
   const size = new THREE.Vector3();
   const center = new THREE.Vector3();
   box.getSize(size);
   box.getCenter(center);
-  const scale = 2.35 / Math.max(size.x || 1, size.y || 1, size.z || 1);
+  const scale = targetHeight / Math.max(size.y || 1, 0.001);
   assetRoot.position.sub(center);
   assetRoot.scale.setScalar(scale);
   assetRoot.position.y = 1.15;
@@ -1222,7 +1268,7 @@ function updateModelViewers(time) {
     }
     if (!isViewerVisible(element)) return;
 
-    const root = viewer.model.parts.root;
+    const root = animatedModelRoot(viewer.model);
     const variant = viewer.variant;
     const compact = variant.includes("mini") || variant.includes("standing");
     root.rotation.y = Math.sin(time * 0.45 + viewer.hero.id.length) * 0.1;
@@ -1263,7 +1309,7 @@ function updateModel(model, time, delta) {
   model.group.position.lerp(target, Math.min(1, delta * 10));
   model.group.position.y += alive && pose !== "dead" ? Math.sin(time * 2.1 + (model.side === "left" ? 0 : 1.2)) * 0.018 : 0;
 
-  const root = model.parts.root;
+  const root = animatedModelRoot(model);
   root.rotation.y = model.side === "left" ? -0.34 : 0.34;
   root.rotation.z = 0;
   root.scale.setScalar(1);
@@ -1294,6 +1340,10 @@ function updateModel(model, time, delta) {
   model.parts.aura.scale.setScalar(1 + Math.sin(time * 4) * 0.08);
   model.parts.shield.visible = (payload?.shield || 0) > 0 || pose === "guarding";
   model.parts.shield.material.opacity = pose === "guarding" ? 0.24 : 0.12;
+}
+
+function animatedModelRoot(model) {
+  return model.parts.assetRoot || model.parts.root;
 }
 
 function playEffect(effect) {
