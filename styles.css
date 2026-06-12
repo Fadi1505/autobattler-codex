@@ -1559,7 +1559,7 @@ button:disabled {
   transform: translate(-13%, -16%);
 }
 
-/* Live 3D hero model surfaces */
+/* 2.5D sprite staging */
 .sprite-stage {
   position: relative;
   width: 100%;
@@ -1569,34 +1569,6 @@ button:disabled {
   place-items: end center;
   overflow: visible;
   isolation: isolate;
-}
-
-.hero-3d-viewer {
-  overflow: hidden;
-}
-
-.hero-3d-viewer canvas {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  display: block;
-  width: 100%;
-  height: 100%;
-  filter:
-    drop-shadow(0 18px 14px rgba(0,0,0,0.42))
-    drop-shadow(0 0 10px color-mix(in srgb, var(--hero-color) 26%, transparent));
-}
-
-.model-loading {
-  position: relative;
-  z-index: 1;
-  color: color-mix(in srgb, var(--hero-color) 62%, var(--text));
-  font-size: 12px;
-  font-weight: 950;
-}
-
-.hero-3d-viewer.model-ready .model-loading {
-  display: none;
 }
 
 .sprite-aura {
@@ -1627,17 +1599,8 @@ button:disabled {
   transform: translateY(2px);
 }
 
-.hero-art .hero-3d-viewer canvas {
-  transform: translateY(2%);
-}
-
 .mini-portrait .sprite-stage {
   min-height: 100%;
-}
-
-.mini-portrait .hero-3d-viewer canvas,
-.standing-avatar .hero-3d-viewer canvas {
-  filter: drop-shadow(0 9px 8px rgba(0,0,0,0.48));
 }
 
 .mini-portrait .sprite-aura,
@@ -1658,16 +1621,6 @@ button:disabled {
 .fighter-portrait .sprite-base {
   bottom: 2%;
   width: 60%;
-}
-
-.fighter-portrait .hero-3d-viewer canvas {
-  filter:
-    drop-shadow(0 24px 18px rgba(0,0,0,0.58))
-    drop-shadow(0 0 18px color-mix(in srgb, var(--hero-color) 44%, transparent));
-}
-
-.fighter-right .fighter-portrait .hero-3d-viewer canvas {
-  transform: scaleX(-1);
 }
 
 /* Mobile battler polish */
@@ -1756,13 +1709,6 @@ body[data-screen="game"] {
 .fighter.charged .sprite-aura {
   opacity: 1;
   animation: chargedAura 1050ms ease-in-out infinite;
-}
-
-.fighter.low-health .hero-3d-viewer canvas {
-  filter:
-    drop-shadow(0 24px 18px rgba(0,0,0,0.58))
-    drop-shadow(0 0 18px rgba(236,91,75,0.45))
-    saturate(0.82);
 }
 
 .fighter.dead {
@@ -2186,14 +2132,6 @@ body {
     rgba(10, 12, 11, 0.88);
 }
 
-.fighter-portrait .hero-3d-viewer canvas {
-  filter:
-    drop-shadow(0 28px 16px rgba(0,0,0,0.68))
-    drop-shadow(0 0 14px color-mix(in srgb, var(--hero-color) 34%, transparent))
-    saturate(1.12)
-    contrast(1.04);
-}
-
 .sprite-aura {
   background:
     radial-gradient(circle, color-mix(in srgb, var(--hero-color) 22%, transparent), transparent 64%);
@@ -2266,7 +2204,7 @@ body {
   }
 }
 
-/* 3D chibi hero pass */
+/* Chibi hero polish pass */
 .hero-art {
   background:
     radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--hero-color) 24%, transparent), transparent 44%),
@@ -2302,14 +2240,6 @@ body {
 
 .arena-board .fighter-portrait {
   width: min(292px, 100%);
-}
-
-.fighter-portrait .hero-3d-viewer canvas {
-  filter:
-    drop-shadow(0 27px 14px rgba(0,0,0,0.66))
-    drop-shadow(0 0 12px color-mix(in srgb, var(--hero-color) 30%, transparent))
-    saturate(1.1)
-    contrast(1.04);
 }
 
 .fighter-portrait .sprite-base {
@@ -2735,82 +2665,264 @@ body {
   }
 }
 
-/* Three.js combat arena */
-.arena-3d-scene {
+/* 2.5D painted sprite pivot */
+.arena-2d-scene {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 50% 40%, rgba(224, 198, 132, 0.08), transparent 36%),
-    linear-gradient(180deg, rgba(38, 47, 38, 0.9), rgba(10, 13, 12, 0.98));
-}
-
-.arena-3d-scene canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-body.arena-3d-ready .arena-board {
-  min-height: 430px;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.02), transparent 42%),
-    radial-gradient(circle at 50% 38%, rgba(242, 184, 75, 0.12), transparent 32%),
+    linear-gradient(90deg, rgba(228, 88, 69, 0.16), transparent 30%, transparent 70%, rgba(82, 183, 177, 0.13)),
+    radial-gradient(ellipse at 31% 67%, rgba(242, 184, 75, 0.18), transparent 28%),
+    radial-gradient(ellipse at 72% 42%, rgba(82, 183, 177, 0.16), transparent 30%),
+    url("assets/arena/moba-arena.png") center / cover no-repeat,
     #101411;
 }
 
-body.arena-3d-ready .arena-board::before {
-  z-index: 1;
-  border-color: rgba(224, 198, 132, 0.13);
+.arena-2d-scene::before {
+  content: "";
+  position: absolute;
+  inset: 8% 7% 12%;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255, 248, 236, 0.08), transparent 34%),
+    linear-gradient(135deg, rgba(255,255,255,0.08), transparent 22%, transparent 78%, rgba(0,0,0,0.16));
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  transform: rotateX(58deg);
+  transform-origin: 50% 68%;
+  opacity: 0.8;
 }
 
-body.arena-3d-ready .arena-board::after {
-  z-index: 1;
-}
-
-body.arena-3d-ready .arena-board .fighter {
+.arena-2d-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 12%, rgba(255, 248, 236, 0.1), transparent 28%),
+    linear-gradient(180deg, transparent 54%, rgba(0,0,0,0.44));
   pointer-events: none;
 }
 
-body.arena-3d-ready .arena-board .fighter-portrait {
-  opacity: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  filter: none;
+.hero-25d-viewer {
+  overflow: hidden;
 }
 
-body.arena-3d-ready .arena-board .fighter-info {
-  pointer-events: auto;
-  border-color: rgba(224, 198, 132, 0.22);
+.hero-25d-viewer .hero-unit {
+  position: relative;
+  z-index: 2;
+  width: 112%;
+  height: 112%;
+  transform: translate(-6%, -8%);
+  overflow: visible;
+  filter:
+    drop-shadow(0 18px 12px rgba(0,0,0,0.5))
+    drop-shadow(0 0 12px color-mix(in srgb, var(--hero-color) 24%, transparent));
+}
+
+.hero-card-sprite .hero-unit {
+  width: 96%;
+  height: 96%;
+  transform: translate(2%, -1%);
+}
+
+.inspector-art .hero-card-sprite .hero-unit {
+  width: 88%;
+  height: 88%;
+  transform: translate(6%, 2%);
+}
+
+.hero-combat-sprite .hero-unit {
+  width: 124%;
+  height: 124%;
+  transform: translate(-11%, -14%);
+  filter:
+    drop-shadow(0 28px 16px rgba(0,0,0,0.68))
+    drop-shadow(0 0 14px color-mix(in srgb, var(--hero-color) 34%, transparent))
+    saturate(1.1)
+    contrast(1.03);
+}
+
+.fighter-right .hero-combat-sprite .hero-unit {
+  transform: translate(-11%, -14%) scaleX(-1);
+}
+
+.hero-mini-sprite .hero-unit {
+  width: 108%;
+  height: 108%;
+  transform: translate(-4%, -5%);
+}
+
+.standing-avatar .hero-mini-sprite .hero-unit {
+  width: 134%;
+  height: 134%;
+  transform: translate(-17%, -16%);
+}
+
+.painted-unit {
+  transform-origin: 50% 82%;
+}
+
+.hero-unit {
+  shape-rendering: geometricPrecision;
+}
+
+.painted-unit path,
+.painted-unit rect,
+.painted-unit ellipse,
+.painted-unit circle {
+  vector-effect: non-scaling-stroke;
+}
+
+.painted-unit path:not([fill="none"]),
+.painted-unit rect,
+.painted-unit ellipse:not(:first-of-type),
+.painted-unit circle {
+  stroke: rgba(11, 13, 12, 0.38);
+  stroke-width: 1.8;
+}
+
+.unit-head > circle,
+.unit-body path:first-child {
+  stroke: rgba(255, 248, 236, 0.18);
+  stroke-width: 2.4;
+}
+
+.unit-head {
+  transform-origin: 120px 118px;
+  animation: paintedHeadIdle 2600ms ease-in-out infinite;
+}
+
+.unit-weapon,
+.unit-arms {
+  transform-origin: 120px 158px;
+}
+
+.fighter.attacking .unit-weapon {
+  animation: paintedWeaponStrike 360ms cubic-bezier(.2,.85,.2,1);
+}
+
+.fighter.casting .unit-weapon,
+.fighter.casting .unit-head {
+  animation: paintedCastLift 620ms ease;
+}
+
+.fighter.guarding .painted-unit {
+  animation: paintedGuard 560ms ease;
+}
+
+.fighter.hit .painted-unit {
+  animation: paintedHit 260ms ease;
+}
+
+.fighter.low-health .hero-25d-viewer .hero-unit {
+  filter:
+    drop-shadow(0 28px 16px rgba(0,0,0,0.68))
+    drop-shadow(0 0 18px rgba(236,91,75,0.38))
+    saturate(0.82);
+}
+
+.fighter.charged .hero-25d-viewer .hero-unit {
+  filter:
+    drop-shadow(0 28px 16px rgba(0,0,0,0.68))
+    drop-shadow(0 0 20px color-mix(in srgb, var(--hero-secondary) 48%, transparent))
+    saturate(1.18);
+}
+
+.hero-shape-thorn {
+  transform: translate(-6%, -11%) scale(1.05);
+}
+
+.hero-combat-sprite .hero-shape-thorn {
+  transform: translate(-11%, -17%) scale(1.08);
+}
+
+.fighter-right .hero-combat-sprite .hero-shape-thorn {
+  transform: translate(-11%, -17%) scaleX(-1) scale(1.08);
+}
+
+.hero-shape-veil .painted-unit,
+.hero-shape-void .painted-unit {
+  filter: saturate(1.05);
+}
+
+.hero-shape-storm .unit-weapon,
+.hero-shape-void .unit-weapon {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--hero-secondary) 55%, transparent));
+}
+
+.arena-board {
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.08), transparent 42%),
-    rgba(8, 11, 10, 0.76);
-  backdrop-filter: blur(8px);
+    linear-gradient(90deg, rgba(228,88,69,0.1), transparent 30%, transparent 70%, rgba(82,183,177,0.1)),
+    #0d1110;
 }
 
-body.arena-3d-ready .round-result {
-  text-shadow:
-    0 6px 18px rgba(0,0,0,0.55),
-    0 0 18px rgba(242, 184, 75, 0.34);
+.arena-board::before,
+.arena-board::after {
+  z-index: 1;
 }
 
-body.arena-3d-ready .fx-layer {
-  z-index: 5;
+.arena-board .fighter {
+  z-index: 6;
+}
+
+.arena-board .fighter-portrait {
+  opacity: 1;
+  background: transparent;
+  border: 0;
+}
+
+.arena-board .fighter-info {
+  position: relative;
+  z-index: 8;
+}
+
+.fx-layer {
+  z-index: 9;
+}
+
+@keyframes paintedHeadIdle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2px) rotate(-1.2deg); }
+}
+
+@keyframes paintedWeaponStrike {
+  0%, 100% { transform: rotate(0deg) translate(0, 0); }
+  45% { transform: rotate(-8deg) translate(8px, -8px); }
+}
+
+@keyframes paintedCastLift {
+  0%, 100% { transform: translateY(0) scale(1); }
+  42% { transform: translateY(-8px) scale(1.04); }
+}
+
+@keyframes paintedGuard {
+  0%, 100% { transform: scale(1); }
+  48% { transform: scale(1.04); }
+}
+
+@keyframes paintedHit {
+  18% { transform: translate(-8px, 4px) rotate(-1deg); filter: brightness(1.55) saturate(0.72); }
+  55% { transform: translate(7px, -3px) rotate(1deg); filter: brightness(1.24) saturate(0.9); }
 }
 
 @media (max-width: 760px) {
-  body.arena-3d-ready .arena-board {
-    min-height: 530px;
+  .arena-2d-scene::before {
+    inset: 18% -8% 13%;
   }
 
-  body.arena-3d-ready .arena-board .fighter-left {
-    bottom: 32px;
+  .hero-card-sprite .hero-unit {
+    width: 102%;
+    height: 102%;
+    transform: translate(-1%, -7%);
   }
 
-  body.arena-3d-ready .arena-board .fighter-right {
-    bottom: 142px;
+  .hero-combat-sprite .hero-unit {
+    width: 122%;
+    height: 122%;
+    transform: translate(-10%, -13%);
+  }
+
+  .fighter-right .hero-combat-sprite .hero-unit {
+    transform: translate(-10%, -13%) scaleX(-1);
   }
 }

@@ -343,7 +343,6 @@ const el = {};
 document.addEventListener("DOMContentLoaded", () => {
   bindElements();
   bindEvents();
-  registerArena3dHeroes();
   renderDraft();
 });
 
@@ -373,20 +372,6 @@ function bindEvents() {
   });
 }
 
-function registerArena3dHeroes() {
-  window.__arena3DHeroes = heroes.map(arenaHeroPayload);
-  if (window.Arena3D) window.Arena3D.setHeroes(window.__arena3DHeroes);
-}
-
-function refreshHero3dViewers() {
-  window.__arena3DNeedsHydrate = true;
-  if (!window.Arena3D) return;
-  window.requestAnimationFrame(() => {
-    window.Arena3D.setHeroes(window.__arena3DHeroes || heroes.map(arenaHeroPayload));
-    window.Arena3D.hydrateViewers();
-  });
-}
-
 function renderDraft() {
   renderDraftSlots();
   el.heroGrid.innerHTML = heroes.map((hero) => `
@@ -406,7 +391,6 @@ function renderDraft() {
   });
 
   renderHeroInspector(getHero(state.selectedHeroId));
-  refreshHero3dViewers();
 }
 
 function renderDraftSlots() {
@@ -513,7 +497,6 @@ function renderGame() {
   } else {
     renderIdleFighters();
   }
-  refreshHero3dViewers();
 }
 
 function renderActionState() {
@@ -1278,25 +1261,7 @@ function addLog(message) {
 }
 
 function syncArena3d() {
-  const player = getUser();
-  if (!player) return;
-  const opponent = state.combat ? null : getOpponent();
-  const payload = state.combat
-    ? {
-        phase: state.combat.finished ? "result" : "combat",
-        round: state.round,
-        left: arenaUnitFromCombat(state.combat.left),
-        right: arenaUnitFromCombat(state.combat.right)
-      }
-    : {
-        phase: "prep",
-        round: state.round,
-        left: arenaUnitFromPlayer(player, "left"),
-        right: opponent ? arenaUnitFromPlayer(opponent, "right") : null
-      };
-
-  window.__arena3DState = payload;
-  if (window.Arena3D) window.Arena3D.update(payload);
+  // The combat presentation is now DOM/SVG based; this remains as a stable hook for future renderers.
 }
 
 function arenaUnitFromCombat(unit) {
@@ -1338,17 +1303,10 @@ function arenaHeroPayload(hero) {
 }
 
 function triggerArena3dEffect(type, unit, enemy, options = {}) {
-  const effect = {
-    type,
-    side: unit?.side,
-    targetSide: enemy?.side,
-    color: options.color || unit?.hero?.color,
-    secondary: options.secondary || unit?.hero?.secondary,
-    tier: options.tier || "basic"
-  };
-  window.__arena3DEffectQueue = window.__arena3DEffectQueue || [];
-  if (window.Arena3D) window.Arena3D.playEffect(effect);
-  else window.__arena3DEffectQueue.push(effect);
+  void type;
+  void unit;
+  void enemy;
+  void options;
 }
 
 function renderFighterPortrait(container, hero, variant) {
@@ -1407,7 +1365,6 @@ function flash(side, className) {
 
 function clearEffects() {
   if (el.fxLayer) el.fxLayer.innerHTML = "";
-  if (window.Arena3D) window.Arena3D.clearEffects();
 }
 
 function playStrikeEffect(unit, enemy) {
@@ -1819,13 +1776,226 @@ function heroMiniSprite(hero) {
   return heroSpriteMarkup(hero, "hero-mini-sprite", "miniature portrait");
 }
 
+let spriteIdCounter = 0;
+
 function heroSpriteMarkup(hero, variant, label) {
+  const uid = `sprite-${hero.id}-${variant}-${spriteIdCounter}`;
+  spriteIdCounter += 1;
   return `
-    <div class="sprite-stage hero-3d-viewer ${variant}" data-hero-id="${hero.id}" data-hero-name="${escapeAttr(hero.name)}" data-hero-shape="${hero.shape}" data-hero-color="${hero.color}" data-hero-secondary="${hero.secondary}" data-viewer-variant="${variant}" style="--hero-color: ${hero.color}; --hero-secondary: ${hero.secondary}" role="img" aria-label="${hero.name} ${label}">
+    <div class="sprite-stage hero-25d-viewer ${variant}" data-hero-id="${hero.id}" data-hero-name="${escapeAttr(hero.name)}" data-hero-shape="${hero.shape}" data-hero-color="${hero.color}" data-hero-secondary="${hero.secondary}" data-viewer-variant="${variant}" style="--hero-color: ${hero.color}; --hero-secondary: ${hero.secondary}" role="img" aria-label="${hero.name} ${label}">
       <span class="sprite-aura"></span>
       <span class="sprite-shadow"></span>
       <span class="sprite-base"></span>
-      <span class="model-loading">3D</span>
+      ${paintedHeroSvg(hero, uid)}
     </div>
   `;
+}
+
+function paintedHeroSvg(hero, uid) {
+  const primary = hero.color;
+  const secondary = hero.secondary;
+  const skin = spriteSkinColor(hero.shape);
+  const bodyScale = hero.shape === "thorn" ? 1.08 : hero.shape === "iron" ? 1.04 : 1;
+  const headY = hero.shape === "thorn" ? 79 : 86;
+
+  return `
+    <svg class="hero-unit hero-model hero-shape-${hero.shape}" viewBox="0 0 240 260" aria-hidden="true">
+      <defs>
+        <linearGradient id="${uid}-primary" x1="62" y1="112" x2="176" y2="212" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="${secondary}"/>
+          <stop offset="0.34" stop-color="${primary}"/>
+          <stop offset="1" stop-color="#1c2422"/>
+        </linearGradient>
+        <linearGradient id="${uid}-skin" x1="86" y1="52" x2="150" y2="126" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#fff0cd"/>
+          <stop offset="1" stop-color="${skin}"/>
+        </linearGradient>
+        <linearGradient id="${uid}-metal" x1="70" y1="58" x2="174" y2="196" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#f0f5ee"/>
+          <stop offset="0.48" stop-color="#8f9a96"/>
+          <stop offset="1" stop-color="#414846"/>
+        </linearGradient>
+        <filter id="${uid}-drop" x="-25%" y="-25%" width="150%" height="160%">
+          <feDropShadow dx="0" dy="14" stdDeviation="7" flood-color="#000" flood-opacity="0.46"/>
+        </filter>
+      </defs>
+
+      <g class="painted-unit" filter="url(#${uid}-drop)" transform="translate(0 0)">
+        ${spriteBackDetails(hero, uid)}
+        <ellipse cx="120" cy="224" rx="58" ry="13" fill="#050707" opacity="0.34"/>
+
+        <g class="unit-legs">
+          <path d="M93 177c-8 15-11 28-8 42 7 5 19 5 28 1l5-43Z" fill="#514237"/>
+          <path d="M128 177l4 43c9 4 21 4 28-1 3-14 0-27-8-42Z" fill="#514237"/>
+          <path d="M82 217c10 4 24 4 33-1l4 13c-10 6-31 6-42-1Z" fill="#2a211d"/>
+          <path d="M128 216c9 5 23 5 33 1l5 11c-11 7-32 7-42 1Z" fill="#2a211d"/>
+        </g>
+
+        <g class="unit-body" transform="translate(120 153) scale(${bodyScale}) translate(-120 -153)">
+          <path d="M75 149c5-34 23-50 45-50s40 16 45 50l9 48c-25 20-83 20-108 0Z" fill="url(#${uid}-primary)"/>
+          <path d="M86 133c18 14 50 14 68 0l9 44c-21 16-65 16-86 0Z" fill="#121716" opacity="0.3"/>
+          <path d="M82 149c19 10 58 11 76 0" fill="none" stroke="#fff8ec" stroke-opacity="0.22" stroke-width="4" stroke-linecap="round"/>
+          <path d="M81 179h78" stroke="#2a201a" stroke-width="9" stroke-linecap="round"/>
+          <rect x="111" y="171" width="20" height="16" rx="4" fill="${secondary}" stroke="#2a201a" stroke-width="4"/>
+        </g>
+
+        <g class="unit-arms">
+          <path class="arm-left" d="M82 142c-19 7-31 24-36 42 6 8 16 10 25 4 4-12 10-22 21-31Z" fill="url(#${uid}-skin)"/>
+          <path class="arm-right" d="M158 142c19 7 31 24 36 42-6 8-16 10-25 4-4-12-10-22-21-31Z" fill="url(#${uid}-skin)"/>
+          <circle cx="55" cy="185" r="11" fill="url(#${uid}-skin)"/>
+          <circle cx="185" cy="185" r="11" fill="url(#${uid}-skin)"/>
+        </g>
+
+        ${spriteWeaponDetails(hero, uid)}
+
+        <g class="unit-head" transform="translate(0 ${headY - 86})">
+          ${spriteHeadgearBack(hero, uid)}
+          <circle cx="120" cy="85" r="35" fill="url(#${uid}-skin)"/>
+          <path d="M85 81c7-28 24-43 48-37 21 5 30 22 25 47-20-11-46-14-73-10Z" fill="${spriteHairColor(hero.shape)}"/>
+          ${spriteHeadgearFront(hero, uid)}
+          <ellipse cx="107" cy="88" rx="5" ry="8" fill="#111717"/>
+          <ellipse cx="134" cy="88" rx="5" ry="8" fill="#111717"/>
+          <path d="M103 74c8-5 16-5 23 0" stroke="#1b1714" stroke-width="4" stroke-linecap="round" opacity="0.65"/>
+          <path d="M130 75c8-4 15-3 20 2" stroke="#1b1714" stroke-width="4" stroke-linecap="round" opacity="0.65"/>
+          <path d="M108 106c8 6 18 6 27 0" stroke="#4b2b25" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.7"/>
+        </g>
+
+        ${spriteFrontDetails(hero, uid)}
+      </g>
+    </svg>
+  `;
+}
+
+function spriteBackDetails(hero, uid) {
+  const primary = hero.color;
+  const secondary = hero.secondary;
+  switch (hero.shape) {
+    case "veil":
+      return `<path d="M79 103c-25 30-34 73-19 107 16 11 32 8 45-3l-3-88Z" fill="${primary}" opacity="0.62"/><path d="M161 103c25 30 34 73 19 107-16 11-32 8-45-3l3-88Z" fill="${secondary}" opacity="0.34"/>`;
+    case "storm":
+      return `<path d="M158 58l11 18 21 4-15 15 4 22-21-10-19 11 2-23-16-15 22-4Z" fill="${secondary}" opacity="0.86"/>`;
+    case "prism":
+      return `<path d="M144 102c18 5 31 16 37 34-15-3-29-1-40 8Z" fill="#2b241f"/><path d="M151 101l20 39" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/>`;
+    case "thorn":
+      return `<path d="M78 109c-24 11-43 30-54 58 18-9 36-10 53-4Z" fill="${primary}" opacity="0.56"/><path d="M162 108c25 10 44 29 55 57-18-9-36-9-53-3Z" fill="${secondary}" opacity="0.5"/>`;
+    case "void":
+      return `<path d="M72 101c-18 31-25 70-18 111 18 12 43 8 62-13l-8-92Z" fill="#242133"/><path d="M168 101c18 31 25 70 18 111-18 12-43 8-62-13l8-92Z" fill="${primary}" opacity="0.4"/>`;
+    default:
+      return `<path d="M84 108c-15 23-22 53-17 90 13 9 31 7 44-5l-8-80Z" fill="${primary}" opacity="0.25"/><path d="M156 108c15 23 22 53 17 90-13 9-31 7-44-5l8-80Z" fill="${secondary}" opacity="0.22"/>`;
+  }
+}
+
+function spriteWeaponDetails(hero, uid) {
+  const primary = hero.color;
+  const secondary = hero.secondary;
+  switch (hero.shape) {
+    case "flame":
+      return `<g class="unit-weapon"><path d="M169 197 205 78" stroke="#3b3028" stroke-width="7" stroke-linecap="round"/><path d="M201 75 211 65 207 84Z" fill="url(#${uid}-metal)"/><path d="M167 200 180 186" stroke="${secondary}" stroke-width="5" stroke-linecap="round"/><path d="M65 188c18-5 29-16 34-34" stroke="${secondary}" stroke-width="8" stroke-linecap="round" opacity="0.8"/></g>`;
+    case "tide":
+      return `<g class="unit-weapon"><ellipse cx="65" cy="166" rx="28" ry="38" fill="${primary}" stroke="url(#${uid}-metal)" stroke-width="7"/><path d="M52 166h26M65 143v46" stroke="${secondary}" stroke-width="5" stroke-linecap="round"/><path d="M181 197V91M164 106c7-14 27-14 34 0M169 93l12-18 12 18" stroke="url(#${uid}-metal)" stroke-width="6" stroke-linecap="round" fill="none"/></g>`;
+    case "veil":
+      return `<g class="unit-weapon"><path d="M49 190l33-28" stroke="url(#${uid}-metal)" stroke-width="7" stroke-linecap="round"/><path d="M190 190l-33-28" stroke="url(#${uid}-metal)" stroke-width="7" stroke-linecap="round"/><path d="M75 166l14-16M165 166l-14-16" stroke="${secondary}" stroke-width="5" stroke-linecap="round"/></g>`;
+    case "iron":
+      return `<g class="unit-weapon"><ellipse cx="69" cy="167" rx="29" ry="39" fill="url(#${uid}-metal)" stroke="${secondary}" stroke-width="6"/><path d="M57 166h24M69 145v43" stroke="#f8f2dc" stroke-width="5" stroke-linecap="round"/><path d="M174 191l26-50" stroke="#4b3c32" stroke-width="8" stroke-linecap="round"/><rect x="185" y="123" width="31" height="25" rx="5" fill="url(#${uid}-metal)" transform="rotate(27 200 136)"/></g>`;
+    case "storm":
+      return `<g class="unit-weapon"><path d="M62 204V93" stroke="#5a3d2b" stroke-width="8" stroke-linecap="round"/><circle cx="62" cy="86" r="13" fill="${secondary}" stroke="${primary}" stroke-width="5"/><path d="M176 161h31v25h-31z" fill="${primary}" stroke="${secondary}" stroke-width="4"/><path d="M54 90l-12 18 17-4-9 20 25-29" stroke="${secondary}" stroke-width="5" stroke-linecap="round" fill="none"/></g>`;
+    case "thorn":
+      return `<g class="unit-weapon"><path d="M43 178c18 2 32-5 43-22" stroke="${secondary}" stroke-width="9" stroke-linecap="round"/><path d="M197 178c-18 2-32-5-43-22" stroke="${secondary}" stroke-width="9" stroke-linecap="round"/><path d="M54 169l-17-15M186 169l17-15" stroke="url(#${uid}-metal)" stroke-width="6" stroke-linecap="round"/></g>`;
+    case "prism":
+      return `<g class="unit-weapon"><path d="M49 91c34 25 34 86 0 111" stroke="#6d472d" stroke-width="7" stroke-linecap="round" fill="none"/><path d="M50 94c12 36 12 70 0 106" stroke="#e8d5a2" stroke-width="2" stroke-linecap="round"/><path d="M70 158h58" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/><path d="M130 158l-16-9 3 9-3 9Z" fill="${secondary}"/></g>`;
+    case "void":
+      return `<g class="unit-weapon"><circle cx="65" cy="171" r="19" fill="${secondary}" opacity="0.82"/><path d="M53 171c10-13 20-13 31 0-10 12-21 12-31 0Z" fill="#fff8ec" opacity="0.42"/><path d="M177 184l18-48" stroke="#57412e" stroke-width="7" stroke-linecap="round"/><circle cx="198" cy="128" r="12" fill="${primary}" stroke="${secondary}" stroke-width="4"/></g>`;
+    default:
+      return "";
+  }
+}
+
+function spriteHeadgearBack(hero, uid) {
+  void uid;
+  switch (hero.shape) {
+    case "flame":
+      return `<path d="M104 50c4-20 15-29 31-36-2 16 2 27 13 36-18-7-31-7-44 0Z" fill="${hero.secondary}"/>`;
+    case "thorn":
+      return `<path d="M89 66 65 38l34 12M151 66l24-28-34 12" fill="${hero.secondary}"/>`;
+    case "iron":
+      return `<path d="M88 78c4-28 20-44 32-44s28 16 32 44Z" fill="url(#${uid}-metal)"/>`;
+    default:
+      return "";
+  }
+}
+
+function spriteHeadgearFront(hero, uid) {
+  const primary = hero.color;
+  const secondary = hero.secondary;
+  switch (hero.shape) {
+    case "tide":
+      return `<path d="M84 78c16-24 56-24 72 0-20-9-52-9-72 0Z" fill="url(#${uid}-metal)"/><circle cx="120" cy="63" r="9" fill="${secondary}"/>`;
+    case "veil":
+      return `<path d="M79 91c5-39 27-55 41-55s36 16 41 55c-19-16-62-16-82 0Z" fill="${primary}"/><path d="M88 92c20 13 43 13 64 0v20c-20 13-44 13-64 0Z" fill="#151719" opacity="0.82"/>`;
+    case "iron":
+      return `<path d="M86 77c14-23 54-23 68 0v21c-20-9-48-9-68 0Z" fill="url(#${uid}-metal)"/><path d="M102 61h36" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/>`;
+    case "storm":
+      return `<path d="M78 74h84L134 34h-27Z" fill="${primary}" stroke="${secondary}" stroke-width="5" stroke-linejoin="round"/><path d="M74 76c23 8 69 8 92 0" stroke="${secondary}" stroke-width="7" stroke-linecap="round"/>`;
+    case "thorn":
+      return `<path d="M86 73c7-23 24-36 34-36s27 13 34 36c-18-10-50-10-68 0Z" fill="#30432d"/><path d="M96 58c6-11 14-17 24-17s18 6 24 17" stroke="${secondary}" stroke-width="5" stroke-linecap="round" fill="none"/>`;
+    case "prism":
+      return `<path d="M84 78c13-26 58-30 72 0-21-8-50-8-72 0Z" fill="#e8d5a2"/><path d="M98 55c11-9 29-11 45-2" stroke="#fff2bf" stroke-width="8" stroke-linecap="round"/>`;
+    case "void":
+      return `<path d="M78 92c4-38 27-56 42-56s38 18 42 56c-20-16-64-16-84 0Z" fill="#202034"/><path d="M92 92c18 10 38 10 56 0v18c-18 12-38 12-56 0Z" fill="${primary}" opacity="0.48"/>`;
+    default:
+      return `<path d="M86 76c18-21 52-21 68 0-20-8-48-8-68 0Z" fill="${primary}"/>`;
+  }
+}
+
+function spriteFrontDetails(hero, uid) {
+  const primary = hero.color;
+  const secondary = hero.secondary;
+  switch (hero.shape) {
+    case "flame":
+      return `<path d="M103 130c12 8 23 8 35 0" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/><path d="M148 62c13 8 18 20 15 35" stroke="${secondary}" stroke-width="5" stroke-linecap="round" opacity="0.85"/>`;
+    case "tide":
+      return `<path d="M91 126c20 11 39 11 58 0" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/><path d="M105 202c12 5 25 5 37 0" stroke="${primary}" stroke-width="5" stroke-linecap="round"/>`;
+    case "veil":
+      return `<path d="M98 102h44" stroke="${secondary}" stroke-width="4" stroke-linecap="round" opacity="0.8"/><path d="M78 122c24 14 60 14 84 0" stroke="#0e1112" stroke-width="8" stroke-linecap="round" opacity="0.56"/>`;
+    case "iron":
+      return `<path d="M90 126h60" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/><path d="M101 142h38" stroke="#fff8ec" stroke-width="4" stroke-linecap="round" opacity="0.42"/>`;
+    case "storm":
+      return `<path d="M103 132c12 7 24 7 36 0" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/><path d="M126 113l-10 23h17l-9 22 28-35h-18l9-19Z" fill="${secondary}" opacity="0.82"/>`;
+    case "thorn":
+      return `<path d="M88 132c20 12 45 12 64 0" stroke="${secondary}" stroke-width="7" stroke-linecap="round"/><path d="M102 160c8 10 28 10 36 0" stroke="#203020" stroke-width="5" stroke-linecap="round"/>`;
+    case "prism":
+      return `<path d="M92 130c18 10 38 10 56 0" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/><path d="M139 99l34 9" stroke="${secondary}" stroke-width="5" stroke-linecap="round"/>`;
+    case "void":
+      return `<path d="M97 126c16 9 30 9 46 0" stroke="${secondary}" stroke-width="6" stroke-linecap="round"/><path d="M116 118c-9 17-14 35-13 52 10 5 24 5 34 0 1-17-4-35-13-52Z" fill="#0f1217" opacity="0.42"/>`;
+    default:
+      return "";
+  }
+}
+
+function spriteSkinColor(shape) {
+  const colors = {
+    flame: "#c77a45",
+    tide: "#8ec8bc",
+    veil: "#8f95b8",
+    iron: "#d6955d",
+    storm: "#dac5a6",
+    thorn: "#81a767",
+    prism: "#e4a66c",
+    void: "#8e9bc3"
+  };
+  return colors[shape] || "#d99b63";
+}
+
+function spriteHairColor(shape) {
+  const colors = {
+    flame: "#2a1c16",
+    tide: "#23383a",
+    veil: "#17151f",
+    iron: "#4a4f4d",
+    storm: "#24324f",
+    thorn: "#334624",
+    prism: "#e6cf9f",
+    void: "#161927"
+  };
+  return colors[shape] || "#3b281f";
 }

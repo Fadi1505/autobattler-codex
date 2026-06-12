@@ -14,10 +14,8 @@ You can also run this from a terminal in the project folder:
 py -m http.server 4173
 ```
 
-Do not open `index.html` directly if you want the 3D hero models. Browsers block local `.glb` model loading from `file://`, so the game needs to be served from `localhost` or hosted online.
+The game can be served locally or hosted as static files. Running a local server is still the simplest way to test the full project consistently.
 
-## 3D Models
+## Graphics
 
-The current hero models use the KayKit Adventurers character pack, which is CC0. The license file is included in `assets/models/KayKit_Adventurers_CC0_License.txt`.
-
-`Prism Archer` also uses the user-provided Meshy archer GLB from `C:\Dev\Assets`, including its embedded archery, running, and walking animations.
+The current build uses a 2.5D presentation: inline painted SVG hero sprites, a layered arena backdrop, and DOM-based spell effects. It no longer depends on live WebGL hero models during gameplay.

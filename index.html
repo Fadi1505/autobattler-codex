@@ -9,21 +9,13 @@
   <title>Autobattler</title>
   <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23101411"/><path d="M18 42h28l-4 10H22l-4-10Zm2-18 8 7 4-15 4 15 8-7-3 16H23L20 24Z" fill="%23f2b84b"/></svg>'>
   <link rel="stylesheet" href="styles.css">
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-      }
-    }
-  </script>
 </head>
 <body>
   <div id="app">
     <section id="draftScreen" class="screen active">
       <header class="app-header">
         <div>
-          <p class="eyebrow">Autobattler 3D Prototype</p>
+          <p class="eyebrow">Autobattler 2.5D Prototype</p>
           <h1>autobattler</h1>
         </div>
         <div id="draftSlots" class="draft-slots" aria-label="Player draft slots"></div>
@@ -97,7 +89,7 @@
           </div>
 
           <div class="arena-board">
-            <div id="arenaScene3d" class="arena-3d-scene" aria-hidden="true"></div>
+            <div class="arena-2d-scene" aria-hidden="true"></div>
             <div id="fxLayer" class="fx-layer" aria-hidden="true"></div>
 
             <div class="fighter fighter-left">
@@ -173,7 +165,6 @@
     </section>
   </div>
 
-  <script src="three-arena.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
