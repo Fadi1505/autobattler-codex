@@ -18,4 +18,4 @@ The game can be served locally or hosted as static files. Running a local server
 
 ## Graphics
 
-The current build uses a 2.5D presentation: inline painted SVG hero sprites, a layered arena backdrop, and DOM-based spell effects. It no longer depends on live WebGL hero models during gameplay.
+The current build uses a 2.5D presentation: transparent PNG hero sprites in `assets/heroes`, a painted arena backdrop in `assets/arena/arcane-ruins-25d.png`, and DOM-based spell effects. The older inline SVG hero bodies remain as a fallback if a hero image fails to load.

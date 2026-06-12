@@ -1369,6 +1369,7 @@ function clearEffects() {
 
 function playStrikeEffect(unit, enemy) {
   triggerArena3dEffect("strike", unit, enemy, { color: unit.hero.color, secondary: unit.hero.secondary });
+  shakeArena("light", 110);
   playPlacedEffect("fx-slash", enemy.side, unit.hero.color, unit.hero.secondary, 380, 110);
 }
 
@@ -1377,6 +1378,7 @@ function playHeroEffect(tier, unit, enemy) {
   const hero = unit.hero;
   const burstDelay = ultimate ? 420 : 260;
   triggerArena3dEffect("hero", unit, enemy, { color: hero.color, secondary: hero.secondary, tier });
+  shakeArena(ultimate ? "heavy" : "light", ultimate ? 280 : 180);
 
   switch (hero.id) {
     case "ember-ronin":
@@ -1461,7 +1463,20 @@ function playPlacedEffect(className, side, color, secondary, duration = 620, del
 function playImpactEffect(unit, kind, color, secondary) {
   const className = kind === "critical" ? "fx-burst" : "fx-slash";
   triggerArena3dEffect("impact", unit, unit, { color, secondary, tier: kind });
+  shakeArena(kind === "critical" ? "heavy" : "light", 0);
   playPlacedEffect(className, unit.side, color, secondary, kind === "critical" ? 580 : 360, 0);
+}
+
+function shakeArena(kind = "light", delay = 0) {
+  scheduleEffect(() => {
+    const board = document.querySelector(".arena-board");
+    if (!board) return;
+    const className = kind === "heavy" ? "shake-heavy" : "shake-light";
+    board.classList.remove("shake-light", "shake-heavy");
+    void board.offsetWidth;
+    board.classList.add(className);
+    window.setTimeout(() => board.classList.remove(className), kind === "heavy" ? 700 : 360);
+  }, delay);
 }
 
 function playShieldEffect(unit, delay = 0) {
@@ -1786,9 +1801,14 @@ function heroSpriteMarkup(hero, variant, label) {
       <span class="sprite-aura"></span>
       <span class="sprite-shadow"></span>
       <span class="sprite-base"></span>
+      <img class="hero-sprite-art" src="${heroSpritePath(hero)}" alt="" aria-hidden="true" loading="eager" decoding="async" onerror="this.hidden=true" />
       ${paintedHeroSvg(hero, uid)}
     </div>
   `;
+}
+
+function heroSpritePath(hero) {
+  return `assets/heroes/${hero.id}.png`;
 }
 
 function paintedHeroSvg(hero, uid) {

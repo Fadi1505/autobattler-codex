@@ -23,6 +23,12 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
@@ -2676,7 +2682,7 @@ body {
     linear-gradient(90deg, rgba(228, 88, 69, 0.16), transparent 30%, transparent 70%, rgba(82, 183, 177, 0.13)),
     radial-gradient(ellipse at 31% 67%, rgba(242, 184, 75, 0.18), transparent 28%),
     radial-gradient(ellipse at 72% 42%, rgba(82, 183, 177, 0.16), transparent 30%),
-    url("assets/arena/moba-arena.png") center / cover no-repeat,
+    url("assets/arena/arcane-ruins-25d.png") center / cover no-repeat,
     #101411;
 }
 
@@ -2704,7 +2710,101 @@ body {
 }
 
 .hero-25d-viewer {
+  overflow: visible;
+}
+
+.hero-art .hero-25d-viewer,
+.mini-portrait .hero-25d-viewer,
+.standing-avatar .hero-25d-viewer {
   overflow: hidden;
+}
+
+.hero-sprite-art {
+  position: absolute;
+  left: 50%;
+  bottom: -4%;
+  z-index: 2;
+  width: 112%;
+  height: 112%;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transform-origin: 50% 86%;
+  filter:
+    drop-shadow(0 18px 12px rgba(0,0,0,0.56))
+    drop-shadow(0 0 12px color-mix(in srgb, var(--hero-color) 30%, transparent))
+    saturate(1.08)
+    contrast(1.04);
+}
+
+.hero-sprite-art:not([hidden]) + .hero-unit {
+  display: none;
+}
+
+.hero-card-sprite .hero-sprite-art {
+  bottom: -5%;
+  width: 106%;
+  height: 110%;
+}
+
+.inspector-art .hero-card-sprite .hero-sprite-art {
+  bottom: -4%;
+  width: 104%;
+  height: 106%;
+}
+
+.hero-combat-sprite .hero-sprite-art {
+  bottom: -16%;
+  width: 138%;
+  height: 138%;
+  filter:
+    drop-shadow(0 31px 18px rgba(0,0,0,0.76))
+    drop-shadow(0 0 18px color-mix(in srgb, var(--hero-color) 38%, transparent))
+    saturate(1.12)
+    contrast(1.05);
+}
+
+.fighter-right .hero-combat-sprite .hero-sprite-art {
+  transform: translateX(-50%) scaleX(-1);
+}
+
+.hero-mini-sprite .hero-sprite-art {
+  bottom: -17%;
+  width: 138%;
+  height: 138%;
+}
+
+.standing-avatar .hero-mini-sprite .hero-sprite-art {
+  bottom: -34%;
+  width: 166%;
+  height: 166%;
+}
+
+.hero-card-sprite[data-hero-id="thorn-beast"] .hero-sprite-art,
+.hero-card-sprite[data-hero-id="tide-warden"] .hero-sprite-art {
+  width: 116%;
+  height: 116%;
+}
+
+.hero-combat-sprite[data-hero-id="thorn-beast"] .hero-sprite-art,
+.hero-combat-sprite[data-hero-id="tide-warden"] .hero-sprite-art {
+  width: 150%;
+  height: 150%;
+}
+
+.hero-card-sprite[data-hero-id="storm-oracle"] .hero-sprite-art,
+.hero-card-sprite[data-hero-id="void-alchemist"] .hero-sprite-art,
+.hero-card-sprite[data-hero-id="prism-archer"] .hero-sprite-art {
+  width: 112%;
+  height: 112%;
+}
+
+.hero-combat-sprite[data-hero-id="storm-oracle"] .hero-sprite-art,
+.hero-combat-sprite[data-hero-id="void-alchemist"] .hero-sprite-art,
+.hero-combat-sprite[data-hero-id="prism-archer"] .hero-sprite-art {
+  width: 144%;
+  height: 144%;
 }
 
 .hero-25d-viewer .hero-unit {
@@ -2801,9 +2901,21 @@ body {
   animation: paintedWeaponStrike 360ms cubic-bezier(.2,.85,.2,1);
 }
 
+.fighter.attacking.fighter-left .hero-sprite-art {
+  animation: spriteImageStrikeLeft 360ms cubic-bezier(.18,.86,.16,1);
+}
+
+.fighter.attacking.fighter-right .hero-sprite-art {
+  animation: spriteImageStrikeRight 360ms cubic-bezier(.18,.86,.16,1);
+}
+
 .fighter.casting .unit-weapon,
 .fighter.casting .unit-head {
   animation: paintedCastLift 620ms ease;
+}
+
+.fighter.casting .hero-sprite-art {
+  animation: spriteImageCast 650ms cubic-bezier(.2,.7,.2,1);
 }
 
 .fighter.guarding .painted-unit {
@@ -2814,6 +2926,10 @@ body {
   animation: paintedHit 260ms ease;
 }
 
+.fighter.hit .hero-sprite-art {
+  animation: spriteImageHit 280ms ease;
+}
+
 .fighter.low-health .hero-25d-viewer .hero-unit {
   filter:
     drop-shadow(0 28px 16px rgba(0,0,0,0.68))
@@ -2821,11 +2937,34 @@ body {
     saturate(0.82);
 }
 
+.fighter.low-health .hero-sprite-art {
+  filter:
+    drop-shadow(0 31px 18px rgba(0,0,0,0.74))
+    drop-shadow(0 0 22px rgba(236,91,75,0.5))
+    saturate(0.88)
+    contrast(1.08);
+}
+
 .fighter.charged .hero-25d-viewer .hero-unit {
   filter:
     drop-shadow(0 28px 16px rgba(0,0,0,0.68))
     drop-shadow(0 0 20px color-mix(in srgb, var(--hero-secondary) 48%, transparent))
     saturate(1.18);
+}
+
+.fighter.charged .hero-sprite-art {
+  filter:
+    drop-shadow(0 31px 18px rgba(0,0,0,0.76))
+    drop-shadow(0 0 24px color-mix(in srgb, var(--hero-secondary) 56%, transparent))
+    saturate(1.22)
+    contrast(1.06);
+}
+
+.fighter.dead .hero-sprite-art {
+  opacity: 0.64;
+  filter:
+    grayscale(0.78)
+    drop-shadow(0 24px 16px rgba(0,0,0,0.6));
 }
 
 .hero-shape-thorn {
@@ -2854,6 +2993,14 @@ body {
   background:
     linear-gradient(90deg, rgba(228,88,69,0.1), transparent 30%, transparent 70%, rgba(82,183,177,0.1)),
     #0d1110;
+}
+
+.arena-board.shake-light {
+  animation: arenaShakeLight 360ms ease;
+}
+
+.arena-board.shake-heavy {
+  animation: arenaShakeHeavy 700ms cubic-bezier(.16,.84,.24,1);
 }
 
 .arena-board::before,
@@ -2905,6 +3052,45 @@ body {
   55% { transform: translate(7px, -3px) rotate(1deg); filter: brightness(1.24) saturate(0.9); }
 }
 
+@keyframes spriteImageStrikeLeft {
+  0%, 100% { translate: 0 0; rotate: 0deg; scale: 1; }
+  42% { translate: 36px -18px; rotate: 4deg; scale: 1.05; }
+  72% { translate: 8px 4px; rotate: -2deg; scale: 0.99; }
+}
+
+@keyframes spriteImageStrikeRight {
+  0%, 100% { translate: 0 0; rotate: 0deg; scale: 1; }
+  42% { translate: -36px -18px; rotate: -4deg; scale: 1.05; }
+  72% { translate: -8px 4px; rotate: 2deg; scale: 0.99; }
+}
+
+@keyframes spriteImageCast {
+  0%, 100% { translate: 0 0; scale: 1; }
+  45% { translate: 0 -18px; scale: 1.07; }
+}
+
+@keyframes spriteImageHit {
+  0%, 100% { translate: 0 0; rotate: 0deg; }
+  18% { translate: -13px 6px; rotate: -2deg; filter: brightness(1.45) saturate(0.72); }
+  58% { translate: 10px -5px; rotate: 1deg; filter: brightness(1.18) saturate(0.9); }
+}
+
+@keyframes arenaShakeLight {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  24% { transform: translate3d(-3px, 2px, 0); }
+  48% { transform: translate3d(4px, -2px, 0); }
+  72% { transform: translate3d(-2px, 1px, 0); }
+}
+
+@keyframes arenaShakeHeavy {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  14% { transform: translate3d(-8px, 5px, 0) scale(1.006); }
+  28% { transform: translate3d(9px, -5px, 0) scale(1.004); }
+  42% { transform: translate3d(-7px, -3px, 0) scale(1.005); }
+  58% { transform: translate3d(5px, 4px, 0) scale(1.002); }
+  76% { transform: translate3d(-3px, 2px, 0) scale(1); }
+}
+
 @media (max-width: 760px) {
   .arena-2d-scene::before {
     inset: 18% -8% 13%;
@@ -2916,13 +3102,29 @@ body {
     transform: translate(-1%, -7%);
   }
 
+  .hero-card-sprite .hero-sprite-art {
+    bottom: -7%;
+    width: 108%;
+    height: 112%;
+  }
+
   .hero-combat-sprite .hero-unit {
     width: 122%;
     height: 122%;
     transform: translate(-10%, -13%);
   }
 
+  .hero-combat-sprite .hero-sprite-art {
+    bottom: -15%;
+    width: 132%;
+    height: 132%;
+  }
+
   .fighter-right .hero-combat-sprite .hero-unit {
     transform: translate(-10%, -13%) scaleX(-1);
+  }
+
+  .fighter-right .hero-combat-sprite .hero-sprite-art {
+    transform: translateX(-50%) scaleX(-1);
   }
 }
